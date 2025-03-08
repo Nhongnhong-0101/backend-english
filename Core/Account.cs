@@ -1,6 +1,6 @@
 ﻿namespace Core
 {
-    public class User
+    public class Account
     {
         private Guid userId { get; set; }
         private string fullName { get; set; }
@@ -11,8 +11,8 @@
 
         private string role { get; set; }
 
-        public User() { }
-        public User (Guid userId, string fullName, string avatarUrl, string email, string passwordHash, DateTime createdAt, string role)
+        public Account() { }
+        public Account (Guid userId, string fullName, string avatarUrl, string email, string passwordHash, DateTime createdAt, string role)
         {
             this.userId = userId;
             this.fullName = fullName;

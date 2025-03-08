@@ -8,21 +8,21 @@ namespace Core
 {
     public class VocabSubMeaning
     {
-        public Guid meaningId;
-        public Guid vocabId;
-        public String partOfSpeech;
-        public String meaningEn;
-        public String meaningVi;
-        public String example;
-        public String vocab;
-        public String imageUrl; //It is not necessary,  just empty string
+        private Guid meaningId;
+        private Guid vocabId;
+        private string partOfSpeech;
+        private string meaningEn;
+        private string meaningVi;
+        private string example;
+        private string audioUrl;
+        private string imageUrl; //It is not necessary,  just empty string
 
         public VocabSubMeaning()
         {
 
         }
 
-        public VocabSubMeaning(Guid meaningId, Guid vocabId, string partOfSpeech, string meaningEn, string meaningVi, string example, string word, string imageUrl)
+        public VocabSubMeaning(Guid meaningId, Guid vocabId, string partOfSpeech, string meaningEn, string meaningVi, string example, string audioUrl, string imageUrl)
         {
             this.meaningId = meaningId;
             this.vocabId = vocabId;
@@ -30,7 +30,7 @@ namespace Core
             this.meaningEn = meaningEn;
             this.meaningVi = meaningVi;
             this.example = example;
-            this.vocab = word;
+            this.audioUrl = audioUrl;
             this.imageUrl = imageUrl;
         }
     }

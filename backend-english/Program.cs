@@ -1,6 +1,8 @@
 
 using Infrastructure.Repository;
 using Infrastructure.Repository.Implements;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace backend_english
 {
@@ -11,14 +13,13 @@ namespace backend_english
             var builder = WebApplication.CreateBuilder(args);
 
             //register repositories
-            builder.Services.AddSingleton<IUserRepository, UserRepository>();
+            builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
             // Add services to the container.
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
-
 
 
             var app = builder.Build();

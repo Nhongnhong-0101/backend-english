@@ -9,7 +9,7 @@ namespace Core
     public class WordSet
     {
         private Guid wordsetId;
-        private string name;
+        private string nameSet;
         private string imageUrl;
         private DateTime updatedAt;
         private Guid userId;
@@ -17,7 +17,7 @@ namespace Core
         public WordSet(Guid wordsetId, string name, string imageUrl, DateTime updatedAt, Guid userId)
         {
             this.wordsetId = wordsetId;
-            this.name = name;
+            this.nameSet = name;
             this.imageUrl = imageUrl;
             this.updatedAt = updatedAt;
             this.userId = userId;
