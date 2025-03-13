@@ -9,17 +9,18 @@ namespace Core
     public class Vocab
     {
         public Guid vocabId;
-        public String vocab;
-        public String primaryMeaningVi;
-        public String primaryMeaningEn;
-        public String phonetic;
-        public String audioUrl;
+        public string vocab;
+        public string primaryMeaningVi;
+        public string primaryMeaningEn;
+        public string phonetic;
+        public string audioUrl;
+        public string partOfSpeech;
 
         public Vocab()
         {
 
         }
-        public Vocab(Guid vocabId, string vocab, string primaryMeaningVi, string primaryMeaningEn, string phonetic, string audioUrl)
+        public Vocab(Guid vocabId, string vocab, string primaryMeaningVi, string primaryMeaningEn, string phonetic, string audioUrl, string pos)
         {
             this.vocabId = vocabId;
             this.vocab = vocab;
@@ -27,6 +28,7 @@ namespace Core
             this.primaryMeaningEn = primaryMeaningEn;
             this.phonetic = phonetic;
             this.audioUrl = audioUrl;
+            this.partOfSpeech = pos;
         }
     }
 

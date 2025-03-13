@@ -10,6 +10,7 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection.Metadata.Ecma335;
 using System.Text.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Sandbox
 {
@@ -65,7 +66,7 @@ namespace Sandbox
         }
         public static async Task<bool> GetDefinitionOfWord(string word)
         {
-            Vocab dbvocab = new Vocab();
+            List<Vocab> vocabs = new List<Vocab>();
             List<VocabSubMeaning> vocabSubs = new List<VocabSubMeaning>();
             try
             {
@@ -141,6 +142,31 @@ namespace Sandbox
 
                                                 listDefsOfPos.Add(resultDef);
 
+                                                if(processingDef == 0)
+                                                {
+                                                    Vocab v = new Vocab();
+                                                    v.vocabId = Guid.NewGuid();
+                                                    v.vocab = word;
+                                                    v.partOfSpeech = pos;
+                                                    v.phonetic = phonetic;
+                                                    v.audioUrl = audio;
+                                                    v.primaryMeaningEn = enDefinition;
+                                                    v.primaryMeaningVi = viDefinition;
+                                                    vocabs.Add(v);
+                                                }
+                                                else
+                                                {
+                                                    VocabSubMeaning vocabSub = new VocabSubMeaning();
+                                                    vocabSub.meaningId = Guid.NewGuid();
+                                                    vocabSub.partOfSpeech = pos;
+                                                    vocabSub.audioUrl = audio;
+                                                    vocabSub.meaningEn = enDefinition;
+                                                    vocabSub.meaningVi = viDefinition;
+                                                    vocabSub.example = example;
+                                                    Vocab father = vocabs.Find(v => v.partOfSpeech == vocabSub.partOfSpeech);
+                                                    vocabSub.vocabId = (father != null) ? father.vocabId : Guid.Empty;
+                                                    vocabSubs.Add(vocabSub);
+                                                }
                                                 processingDef++;
                                             }
                                         }
@@ -163,7 +189,9 @@ namespace Sandbox
                                 Dictionary<string, object> result = new Dictionary<string, object>();
                                 result["word"] = res.RootElement[0].GetProperty("word").ToString();
                                 result["meanings"] = listOfMeans;
-                                string test = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+
+                                //start to save in db 
+                                await SaveToDatabase(vocabs, vocabSubs);
                             }
                         }
                     }
@@ -198,6 +226,67 @@ namespace Sandbox
             catch (Exception ex) {
                 Console.WriteLine($"Failed to translate {en} to VietNamese");
                 return "";
+            }
+        }
+
+        public static async Task<bool> SaveToDatabase (List<Vocab> vocabs, List<VocabSubMeaning> vocabSubs)
+        {
+            string connectionString = "Host=localhost;Port=5432;Database=len_db;Username=postgres;Password=admin";
+            try
+            {
+                using( var connecttion = new NpgsqlConnection(connectionString))
+                {
+                    connecttion.Open();
+                    foreach (Vocab vocab in vocabs)
+                    {
+                        string sql = "INSERT INTO vocab (vocab_id, vocab, primarymeaningvi, primarymeaningen, phonetic, audioUrl, part_of_speech)" +
+                            " VALUES (@vocab_id, @vocab, @primarymeaningvi, @primarymeaningen, @phonetic, @audioUrl, @part_of_speech)";
+                        var parameters = new
+                        {
+                            vocab_id = vocab.vocabId,
+                            vocab = vocab.vocab,
+                            primarymeaningvi = vocab.primaryMeaningEn,
+                            primarymeaningen = vocab.primaryMeaningVi,
+                            phonetic = vocab.phonetic,
+                            audioUrl = vocab.audioUrl,
+                            part_of_speech = vocab.partOfSpeech
+                        };
+
+                        var result = await connecttion.ExecuteAsync(sql, parameters);
+                        if (result < 1) return false;
+                    }
+                    string sqlSub = "INSERT INTO vocab_sub_meaning (meaning_id  ,vocab_id ,part_of_speech ,meaning_en ,meaning_vi ,example ,audio_url ,image_url)" +
+                           " VALUES (@meaning_id ,@vocab_id ,@part_of_speech ,@meaning_en ,@meaning_vi ,@example ,@audio_url ,@image_url)";
+                    foreach (VocabSubMeaning sub in vocabSubs)
+                    {
+                        var parameters = new
+                        {
+                            meaning_id = sub.meaningId,
+                            vocab_id = sub.vocabId,
+                            meaning_en = sub.meaningEn,
+                            meaning_vi = sub.meaningVi,
+                            example = sub.example,
+                            audio_url = sub.audioUrl,
+                            image_url = sub.imageUrl,
+                            part_of_speech = sub.partOfSpeech
+                        };
+
+                        var insertedSub = await connecttion.ExecuteAsync(sqlSub, parameters);
+                        if (insertedSub > 0)
+                        {
+                            Console.WriteLine(@"Insert new submeaning {sub.meaningId} for {vocab.vocab}");
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"Failed to save to db");
+                return false;
             }
         }
         public static void InsertData()

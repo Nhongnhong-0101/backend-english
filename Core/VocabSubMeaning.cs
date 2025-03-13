@@ -8,20 +8,19 @@ namespace Core
 {
     public class VocabSubMeaning
     {
-        private Guid meaningId;
-        private Guid vocabId;
-        private string partOfSpeech;
-        private string meaningEn;
-        private string meaningVi;
-        private string example;
-        private string audioUrl;
-        private string imageUrl; //It is not necessary,  just empty string
+        public Guid meaningId;
+        public Guid vocabId;
+        public string partOfSpeech;
+        public string meaningEn;
+        public string meaningVi;
+        public string example;
+        public string audioUrl;
+        public string imageUrl; //It is not necessary,  just empty string
 
         public VocabSubMeaning()
         {
 
         }
-
         public VocabSubMeaning(Guid meaningId, Guid vocabId, string partOfSpeech, string meaningEn, string meaningVi, string example, string audioUrl, string imageUrl)
         {
             this.meaningId = meaningId;
