@@ -1,5 +1,6 @@
 ﻿using Core;
 using Dapper;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using System.IO;
@@ -18,14 +19,15 @@ namespace Sandbox
     }
         internal class Program
     {
+        //readonly static HttpClient httpClient = new HttpClient();
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            translate3000WordsAndSaveToDb();
-
+            //translate3000WordsAndSaveToDb();
+            await GetDefinitionOfWord("live");
             Console.WriteLine("Hello World!");
         }
-        public static void translate3000WordsAndSaveToDb()
+        public static async Task translate3000WordsAndSaveToDb()
         {
             try
             {
@@ -46,12 +48,10 @@ namespace Sandbox
                 //        taskLine.Wait();
                 //    }
                 //}
-                Vocab vocab;
-                List<VocabSubMeaning> vocabSubs = new List<VocabSubMeaning>();
-                Task t = GetDefinitionOfWord(word: "Live");
-                t.Wait();
-
-
+                //Vocab vocab;
+                //List<VocabSubMeaning> vocabSubs = new List<VocabSubMeaning>();
+   
+                await GetDefinitionOfWord("live");
                 Console.WriteLine("Done the task");
             }
             catch (Exception ex)
@@ -68,33 +68,39 @@ namespace Sandbox
                 if (word != null)
                 {
                     string url = $"https://api.dictionaryapi.dev/api/v2/entries/en/{word}";
-                    using (HttpClient httpClient = new HttpClient())
+                    using (HttpClient httpclient = new HttpClient { Timeout = TimeSpan.FromSeconds(10) })
                     {
-                        httpClient.BaseAddress = new Uri(url);
-                        var response = await httpClient.GetAsync(url);
-                        if(response != null)
+                        var response = await httpclient.GetAsync(url);
+                        if (response != null)
                         {
                             if (response.IsSuccessStatusCode)
                             {
-                                var json  = response.Content.ReadAsStringAsync();
-                                var res = JsonDocument.Parse(json.Result);
-                                if ( res != null)
+                                var json = await response.Content.ReadAsStringAsync();
+                                var res = JsonDocument.Parse(json);
+                                if (res != null)
                                 {
                                     string pos, phonetic, audio;
                                     audio = "";
                                     //get the main meaning to save as Vocab 
-                                    pos = res.RootElement[0].GetProperty("meanings")[0].GetProperty("partOfSpeech").ToString();
                                     phonetic = res.RootElement[0].GetProperty("phonetic").ToString();
                                     JsonElement phonetics = res.RootElement[0].GetProperty("phonetics");
                                     foreach (var p in phonetics.EnumerateArray())
                                     {
-                                        if (p.TryGetProperty("audio", out JsonElement audioUrl) && !string.IsNullOrEmpty(audioUrl.GetString()))
+                                        if (string.IsNullOrEmpty(phonetic))
                                         {
-                                            audio = !String.IsNullOrEmpty(audioUrl.ToString()) ? audioUrl.ToString() : "";
-                                            break;
+                                            if (p.TryGetProperty("text", out JsonElement curPhonetic))
+                                            {
+                                                phonetic = !string.IsNullOrEmpty(curPhonetic.ToString()) ? curPhonetic.ToString() : "";
+                                            }
                                         }
+                                        if (p.TryGetProperty("audio", out JsonElement audioUrl))
+                                        {
+                                            audio = string.IsNullOrEmpty(audioUrl.GetString()) ? audioUrl.ToString() : "";
+                                        }
+                                        if (!string.IsNullOrEmpty(phonetic) && !string.IsNullOrEmpty(audio)) { break; }
                                     }
                                     JsonElement meanings = res.RootElement[0].GetProperty("meanings");
+                                    pos = meanings[0].GetProperty("partOfSpeech").ToString();
                                     string enDefinition = meanings[0].GetProperty("definitions")[0].GetProperty("definition").ToString();
                                     dbvocab.vocabId = new Guid();
                                     dbvocab.vocab = word;
@@ -108,38 +114,47 @@ namespace Sandbox
                                     int i = 0;
                                     while (i < lengthOfRespones)
                                     {
-                                        lengthOfRespones--;
                                         meanings = res.RootElement[i].GetProperty("meanings");
                                         int processingMean = 0;
-                                        while (processingMean < meanings.GetArrayLength() && processingMean <3)
+                                        while (processingMean < meanings.GetArrayLength() && processingMean < 3)
                                         {
                                             processingMean++;
                                             pos = meanings[processingMean].GetProperty("partOfSpeech").ToString();
                                             JsonElement definitions = meanings[processingMean].GetProperty("definitions");
                                             enDefinition = "";
-                                            int numOfDefs = (definitions.GetArrayLength() < 2) ? definitions.GetArrayLength() : 2;
-                                            while (numOfDefs > 0)
+                                            string example = "";
+                                            int processingDef = 1;// the first (=0) definition is saved in Vocab
+                                            while (processingDef < definitions.GetArrayLength() && processingDef < 4)
                                             {
-                                                numOfDefs--;
-                                                enDefinition = definitions[numOfDefs].GetProperty("definition").ToString();
-                                                string example = definitions[numOfDefs].TryGetProperty("example", out JsonElement exampleElement) ? exampleElement.GetString() : null;
-                                                VocabSubMeaning dbSubVocab = new VocabSubMeaning(new Guid(), dbvocab.vocabId, pos, enDefinition, null, example, audio, null);
-                                                //we need to translate primaryMeaningEn before saving to db
-                                                vocabSubs.Add(dbSubVocab);
+                                                if (definitions[processingDef].TryGetProperty("definition", out JsonElement def))
+                                                {
+                                                    enDefinition = !string.IsNullOrEmpty(def.ToString()) ? def.ToString() : "";
+                                                }
+                                                if (definitions[processingDef].TryGetProperty("example", out JsonElement exampleElement))
+                                                {
+                                                    example = !string.IsNullOrEmpty(exampleElement.ToString()) ? exampleElement.ToString() : "";
+                                                }
+                                                if (!string.IsNullOrEmpty(enDefinition.ToString()) && !string.IsNullOrEmpty(example.ToString()))
+                                                {
+                                                    VocabSubMeaning dbSubVocab = new VocabSubMeaning(new Guid(), dbvocab.vocabId, pos, enDefinition, "", example, audio, "");
+                                                    //we need to translate primaryMeaningEn before saving to db
+                                                    vocabSubs.Add(dbSubVocab);
+                                                    processingDef++;
+                                                }
                                             }
 
                                         }
                                     }
-                                    
                                 }
                             }
                         }
+                       
                     }
                     Console.WriteLine("So tired");
                     return true;
                 }
             }
-            catch (Exception ex)
+            catch (Exception ex
             {
                 Console.WriteLine("Failed when try to get definition by calling api: " + ex.Message);
             }
