@@ -14,58 +14,61 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Sandbox
 {
-    public class Data
-    {
-        public Guid id { get; set; }
-        public string word { get; set; }
-        public string phonetic { get; set; }
-        public string description { get; set; }
-
-    }
         internal class Program
-    {
+    {          
         readonly static HttpClient httpClient = new HttpClient();
 
         static async Task Main(string[] args)
         {
-            //translate3000WordsAndSaveToDb();
-            await GetDefinitionOfWord("live");
+            List<string> OnekVocabs = new List<string>();
+            await translate3000WordsAndSaveToDb(OnekVocabs);
+
+            Thread.Sleep(1000);
+
+            int numberTasks = 15;
+            List<Task> tasks = new List<Task>();
+            foreach (string word in OnekVocabs)
+            {
+                Task t = GetDefinitionOfWord(word);
+                tasks.Add(t);
+       
+                if (tasks.Count >= numberTasks)
+                {
+                    Task finished = await Task.WhenAny(tasks);
+                    Thread.Sleep(500);
+                    tasks.Remove(finished);
+                }
+            }
+            await Task.WhenAll(tasks);
             Console.WriteLine("Hello World!");
         }
-        public static async Task translate3000WordsAndSaveToDb()
+        public static async Task translate3000WordsAndSaveToDb(List<string> OnekVocabs)
         {
             try
             {
-                //int count = 1;
-                //string file3000 = "D:\\source\\backend-english\\Sandbox\\3000CommmonWords.txt";
-                //using (StreamReader streamReader = new StreamReader(file3000))
-                //{
-                //    List<string> words = new List<string>();
-                //    Task<string> taskLine = streamReader.ReadLineAsync();
-                //    taskLine.Wait();
-                //    while (taskLine.Result != null)
-                //    {
-                //        Console.WriteLine($"read word {count++}: {taskLine.Result}");
-                //        words.Add(taskLine.Result);
-                //        //GetDefinitionOfWord(word[i], out Vocab vocab, List<VocabSubMeaning> subs)
-                //        //SaveWordToDb(vocab, subs)
-                //        taskLine = streamReader.ReadLineAsync();
-                //        taskLine.Wait();
-                //    }
-                //}
-                //Vocab vocab;
-                //List<VocabSubMeaning> vocabSubs = new List<VocabSubMeaning>();
-   
-                await GetDefinitionOfWord("live");
-                Console.WriteLine("Done the task");
+                int count = 1;
+                OnekVocabs.Clear();
+                string file3000 = "D:\\source\\backend-english\\Sandbox\\3000CommmonWords.txt";
+                string? line;
+                using (StreamReader streamReader = new StreamReader(file3000))
+                {
+                    line = await streamReader.ReadLineAsync();
+                    while (line!= null && count < 2000)
+                    {
+                        //Console.WriteLine($"read word {count++} : {line}");
+                        OnekVocabs.Add(line);
+                        line = await streamReader.ReadLineAsync();
+                    }
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine("Failed to read from file"+ ex.Message);
             }
         }
         public static async Task<bool> GetDefinitionOfWord(string word)
         {
+            Console.WriteLine($"Processing {word}");
             List<Vocab> vocabs = new List<Vocab>();
             List<VocabSubMeaning> vocabSubs = new List<VocabSubMeaning>();
             try
@@ -141,20 +144,25 @@ namespace Sandbox
                                                 resultDef["example"] = example;
 
                                                 listDefsOfPos.Add(resultDef);
-
+                                                bool isVocab = false;
                                                 if(processingDef == 0)
                                                 {
-                                                    Vocab v = new Vocab();
-                                                    v.vocabId = Guid.NewGuid();
-                                                    v.vocab = word;
-                                                    v.partOfSpeech = pos;
-                                                    v.phonetic = phonetic;
-                                                    v.audioUrl = audio;
-                                                    v.primaryMeaningEn = enDefinition;
-                                                    v.primaryMeaningVi = viDefinition;
-                                                    vocabs.Add(v);
+                                                    isVocab = vocabs.Find(e => e.partOfSpeech == pos) != null ? false : true;
+                                                    if (isVocab)
+                                                    {
+                                                        Vocab v = new Vocab();
+                                                        v.vocabId = Guid.NewGuid();
+                                                        v.vocab = word;
+                                                        v.partOfSpeech = pos;
+                                                        v.phonetic = phonetic;
+                                                        v.audioUrl = audio;
+                                                        v.primaryMeaningEn = enDefinition;
+                                                        v.primaryMeaningVi = viDefinition;
+                                                        vocabs.Add(v);
+                                                    }
                                                 }
-                                                else
+
+                                                if (processingDef > 0 || !isVocab)
                                                 {
                                                     VocabSubMeaning vocabSub = new VocabSubMeaning();
                                                     vocabSub.meaningId = Guid.NewGuid();
@@ -164,8 +172,11 @@ namespace Sandbox
                                                     vocabSub.meaningVi = viDefinition;
                                                     vocabSub.example = example;
                                                     Vocab father = vocabs.Find(v => v.partOfSpeech == vocabSub.partOfSpeech);
-                                                    vocabSub.vocabId = (father != null) ? father.vocabId : Guid.Empty;
-                                                    vocabSubs.Add(vocabSub);
+                                                    if (father != null)
+                                                    {
+                                                        vocabSub.vocabId = father.vocabId;
+                                                        vocabSubs.Add(vocabSub);
+                                                    }
                                                 }
                                                 processingDef++;
                                             }
@@ -202,7 +213,7 @@ namespace Sandbox
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed when try to get definition by calling api: " + ex.Message);
+                Console.WriteLine($"Failed when try to get definition by calling api: {word.ToUpper()} " + ex.Message);
             }
             return false;
         }
@@ -218,7 +229,6 @@ namespace Sandbox
                     var translation = JsonDocument.Parse(result);
                     var data = translation.RootElement.GetProperty("responseData");
                     var res = data.GetProperty("translatedText");
-                    Console.WriteLine($"Done to translate {en} to VietNamese");
                     return res.ToString();
                 }
                 return "";
@@ -231,6 +241,7 @@ namespace Sandbox
 
         public static async Task<bool> SaveToDatabase (List<Vocab> vocabs, List<VocabSubMeaning> vocabSubs)
         {
+            Console.WriteLine($"Start to save {vocabs.Count} vocabs and {vocabSubs.Count} subVocabs of {vocabs[0].vocab.ToUpper()} to database");
             string connectionString = "Host=localhost;Port=5432;Database=len_db;Username=postgres;Password=admin";
             try
             {
@@ -255,6 +266,7 @@ namespace Sandbox
                         var result = await connecttion.ExecuteAsync(sql, parameters);
                         if (result < 1) return false;
                     }
+
                     string sqlSub = "INSERT INTO vocab_sub_meaning (meaning_id  ,vocab_id ,part_of_speech ,meaning_en ,meaning_vi ,example ,audio_url ,image_url)" +
                            " VALUES (@meaning_id ,@vocab_id ,@part_of_speech ,@meaning_en ,@meaning_vi ,@example ,@audio_url ,@image_url)";
                     foreach (VocabSubMeaning sub in vocabSubs)
@@ -272,20 +284,16 @@ namespace Sandbox
                         };
 
                         var insertedSub = await connecttion.ExecuteAsync(sqlSub, parameters);
-                        if (insertedSub > 0)
-                        {
-                            Console.WriteLine(@"Insert new submeaning {sub.meaningId} for {vocab.vocab}");
-                        }
-                        else
-                        {
-                            return false;
-                        }
+                        if (insertedSub < 1) return false;
+                        
                     }
+                    Console.WriteLine($"---Done to save {vocabs.Count} vocabs and {vocabSubs.Count} subVocabs of {vocabs[0].vocab.ToUpper()} to database");
+
                     return true;
                 }
             }
             catch (Exception ex) {
-                Console.WriteLine($"Failed to save to db");
+                Console.WriteLine($"Failed to save to db {ex.Message}");
                 return false;
             }
         }
@@ -304,7 +312,7 @@ namespace Sandbox
                 connection.Open();
 
                 string sql = "SELECT * FROM public.essential_3000_vocab";
-                var result = connection.Query<Data>(sql).ToList();
+                //var result = connection.Query<Data>(sql).ToList();
             }
         }
     }
