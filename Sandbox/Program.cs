@@ -25,22 +25,22 @@ namespace Sandbox
 
             Thread.Sleep(1000);
 
-            int numberTasks = 15;
-            List<Task> tasks = new List<Task>();
-            foreach (string word in OnekVocabs)
-            {
-                Task t = GetDefinitionOfWord(word);
-                tasks.Add(t);
+            //int numberTasks = 15;
+            //List<Task> tasks = new List<Task>();
+            //foreach (string word in OnekVocabs)
+            //{
+            //    Task t = GetDefinitionOfWord(word);
+            //    tasks.Add(t);
        
-                if (tasks.Count >= numberTasks)
-                {
-                    Task finished = await Task.WhenAny(tasks);
-                    Thread.Sleep(500);
-                    tasks.Remove(finished);
-                }
-            }
-            await Task.WhenAll(tasks);
-            Console.WriteLine("Hello World!");
+            //    if (tasks.Count >= numberTasks)
+            //    {
+            //        Task finished = await Task.WhenAny(tasks);
+            //        Thread.Sleep(500);
+            //        tasks.Remove(finished);
+            //    }
+            //}
+            //await Task.WhenAll(tasks);
+            //Console.WriteLine("Hello World!");
         }
         public static async Task translate3000WordsAndSaveToDb(List<string> OnekVocabs)
         {
@@ -48,7 +48,8 @@ namespace Sandbox
             {
                 int count = 1;
                 OnekVocabs.Clear();
-                string file3000 = "D:\\source\\backend-english\\Sandbox\\3000CommmonWords.txt";
+                string pathFather = Directory.GetParent(AppDomain.CurrentDomain.BaseDirectory)!.Parent!.Parent!.Parent!.FullName;
+                string file3000 = Path.Combine(pathFather, "3000CommmonWords.txt");
                 string? line;
                 using (StreamReader streamReader = new StreamReader(file3000))
                 {
