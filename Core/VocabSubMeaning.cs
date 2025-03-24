@@ -8,14 +8,14 @@ namespace Core
 {
     public class VocabSubMeaning
     {
-        public Guid meaningId;
-        public Guid vocabId;
-        public String partOfSpeech;
-        public String meaningEn;
-        public String meaningVi;
-        public String example;
-        public String vocab;
-        public String imageUrl; //It is not necessary,  just empty string
+        public Guid meaningId { get; set; }
+        public Guid vocabId { get; set; }
+        public String partOfSpeech { get; set; }
+        public String meaningEn { get; set; }
+        public String meaningVi { get; set; }
+        public String example { get; set; }
+        public String vocab { get; set; }
+        public String imageUrl { get; set; } //It is not necessary,  just empty strin 
 
         public VocabSubMeaning()
         {

@@ -1,9 +1,10 @@
 ﻿using Core;
 using Dapper;
+using Infrastructure.Config;
 using Microsoft.Extensions.Configuration;
+using Npgsql;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,15 +14,15 @@ namespace Infrastructure.Repository.Implements
     public class UserRepository : IUserRepository
     {
         private readonly string connectionString;
-        public UserRepository(IConfiguration configuration)
+        public UserRepository()
         {
-            this.connectionString = configuration.GetConnectionString("DefaultConnection");
+            connectionString = DatabaseConfig.getConnectionString();
         }
         public Task<User> AddNewUser(User newUser)
         {
             try
             {
-                using (var connection = new SqlConnection(connectionString))
+                using (var connection = new NpgsqlConnection(connectionString))
                 {
                     connection.Open();
                     var sql = "INSERT INTO Users (UserId, Email, Password, FullName, Avatar, Role, CreatedAt, UpdatedAt) VALUES (@UserId, @Email, @Password, @FullName, @Avatar, @Role, @CreatedAt, @UpdatedAt)";
@@ -44,7 +45,7 @@ namespace Infrastructure.Repository.Implements
 
             try
             {
-                using (var connection = new SqlConnection(connectionString))
+                using (var connection = new NpgsqlConnection(connectionString))
                 {
                     connection.Open();
                     var sql = "Select * from Users where Email = @Email";

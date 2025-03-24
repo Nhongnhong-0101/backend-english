@@ -8,12 +8,12 @@ namespace Core
 {
     public class Vocab
     {
-        public Guid vocabId;
-        public String vocab;
-        public String primaryMeaningVi;
-        public String primaryMeaningEn;
-        public String phonetic;
-        public String audioUrl;
+        public Guid vocabId { get; set; }
+        public String vocab{ get; set; }
+        public String primaryMeaningVi{ get; set; }
+        public String primaryMeaningEn{ get; set; }
+        public String phonetic{ get; set; }
+        public String audioUrl { get; set; }
 
         public Vocab()
         {
