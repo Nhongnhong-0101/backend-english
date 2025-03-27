@@ -1,4 +1,4 @@
-﻿namespace Core
+﻿namespace Core.Models
 {
     public class User
     {
@@ -12,7 +12,7 @@
         private string role { get; set; }
 
         public User() { }
-        public User (Guid userId, string fullName, string avatarUrl, string email, string passwordHash, DateTime createdAt, string role)
+        public User(Guid userId, string fullName, string avatarUrl, string email, string passwordHash, DateTime createdAt, string role)
         {
             this.userId = userId;
             this.fullName = fullName;
@@ -23,5 +23,5 @@
             this.role = role;
         }
     }
-    
+
 }

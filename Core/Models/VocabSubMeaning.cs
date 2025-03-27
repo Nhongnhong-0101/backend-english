@@ -4,18 +4,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.Models
 {
     public class VocabSubMeaning
     {
         public Guid meaningId { get; set; }
         public Guid vocabId { get; set; }
-        public String partOfSpeech { get; set; }
-        public String meaningEn { get; set; }
-        public String meaningVi { get; set; }
-        public String example { get; set; }
-        public String vocab { get; set; }
-        public String imageUrl { get; set; } //It is not necessary,  just empty strin 
+        public string partOfSpeech { get; set; }
+        public string meaningEn { get; set; }
+        public string meaningVi { get; set; }
+        public string example { get; set; }
+        public string vocab { get; set; }
+        public string imageUrl { get; set; } //It is not necessary,  just empty strin 
 
         public VocabSubMeaning()
         {
@@ -30,7 +30,7 @@ namespace Core
             this.meaningEn = meaningEn;
             this.meaningVi = meaningVi;
             this.example = example;
-            this.vocab = word;
+            vocab = word;
             this.imageUrl = imageUrl;
         }
     }

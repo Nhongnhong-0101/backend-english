@@ -1,5 +1,4 @@
-﻿using Core;
-using Infrastructure.Repository.Interfaces;
+﻿using Infrastructure.Repository.Interfaces;
 using System;
 using Npgsql;
 using System.Collections.Generic;
@@ -8,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.Extensions.Configuration;
+using Core.Models;
 
 namespace Infrastructure.Repository.Implements
 {
@@ -42,26 +42,6 @@ namespace Infrastructure.Repository.Implements
             }
             catch (Exception ex)
             {
-                throw ex;
-            }
-        }
-
-        public async Task<IEnumerable<Vocab>> GetFullMeaningsVocabAsync(string vocab)
-        {
-            List<Vocab> result = new List<Vocab> ();
-            try
-            {
-                vocab = vocab.Trim().ToLower();
-                string command = "select * from vocab where vocab =@Vocab";
-                using (var connect = new NpgsqlConnection(connectionString))
-                {
-                    await connect.OpenAsync();
-                    var excute = await connect.QueryAsync<Vocab>(command, new { Vocab = vocab});
-                    result = excute.ToList();
-                    return result;
-                }
-            }
-            catch (Exception ex) {
                 throw ex;
             }
         }

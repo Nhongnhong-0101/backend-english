@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.Models
 {
     public class IrregularVerb
     {
@@ -14,10 +14,10 @@ namespace Core
         private string meaning;
         public IrregularVerb(string Infinitive, string PastSimple, string PastParticiple, string Meaning)
         {
-            this.infinitive = Infinitive;
-            this.pastSimple = PastSimple;
-            this.pastParticiple = PastParticiple;
-            this.meaning = Meaning;
+            infinitive = Infinitive;
+            pastSimple = PastSimple;
+            pastParticiple = PastParticiple;
+            meaning = Meaning;
         }
     }
 }

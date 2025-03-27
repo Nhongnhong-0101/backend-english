@@ -1,6 +1,7 @@
-﻿using Core;
+﻿using Core.Models;
 using Infrastructure.Repository;
 using Infrastructure.Repository.Interfaces;
+using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -11,10 +12,10 @@ namespace backend_english.Controllers
     [ApiController]
     public class VocabController : ControllerBase
     {
-        private readonly IVocabRepository _vocabRepository;
-        public VocabController(IVocabRepository vocabRepository)
+        private readonly IVocabService vocabService;
+        public VocabController(IVocabService vocabService)
         {
-            _vocabRepository = vocabRepository;
+            this.vocabService = vocabService;
         }
 
         [HttpGet]
@@ -25,7 +26,7 @@ namespace backend_english.Controllers
                 return BadRequest(new ApiResponse<string>(400, "Error: Vocab should not be empty", null));
             }
             vocab = vocab.Trim();
-            var defintions = await _vocabRepository.GetShortMeaningVocabAsync(vocab);
+            var defintions = await vocabService.GetShortMeaningVocabAsync(vocab);
             if (defintions == null)
             {
                 return NotFound(new ApiResponse<string>(404, $"No definitions found for '{vocab}'", null));
@@ -41,12 +42,12 @@ namespace backend_english.Controllers
                 return BadRequest(new ApiResponse<string>(400, "Error: Vocab should not be empty", null));
             }
             vocab = vocab.Trim();
-            var defintions = await _vocabRepository.GetFullMeaningsVocabAsync(vocab);
+            var defintions = await vocabService.GetFullMeaningsVocabAsync(vocab);
             if (defintions == null)
             {
                 return NotFound(new ApiResponse<string>(404, $"No definitions found for '{vocab}'", null));
             }
-            return Ok(new ApiResponse<List<Vocab>>(200, "Success", defintions.ToList()));
+            return Ok(new ApiResponse<Vocab>(200, "Success", defintions));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Core;
+﻿using Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +9,6 @@ namespace Infrastructure.Repository.Interfaces
 {
     public interface IVocabRepository
     {
-        public Task<IEnumerable<Vocab>> GetFullMeaningsVocabAsync(string vocab);
         public Task<IEnumerable<Vocab>> GetShortMeaningVocabAsync(string vocab);
         public Task<IEnumerable<Vocab>> GetAllVocabAsync();
     }

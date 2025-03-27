@@ -1,4 +1,4 @@
-﻿using Core;
+﻿using Core.Models;
 using Dapper;
 using Infrastructure.Config;
 using Microsoft.Extensions.Configuration;

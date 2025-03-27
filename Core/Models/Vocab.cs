@@ -4,16 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.Models
 {
     public class Vocab
     {
         public Guid vocabId { get; set; }
-        public String vocab{ get; set; }
-        public String primaryMeaningVi{ get; set; }
-        public String primaryMeaningEn{ get; set; }
-        public String phonetic{ get; set; }
-        public String audioUrl { get; set; }
+        public string vocab { get; set; }
+        public string primaryMeaningVi { get; set; }
+        public string primaryMeaningEn { get; set; }
+        public string phonetic { get; set; }
+        public string audioUrl { get; set; }
 
         public Vocab()
         {
