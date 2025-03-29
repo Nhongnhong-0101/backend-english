@@ -2,6 +2,7 @@
 using Infrastructure.Repository;
 using Infrastructure.Repository.Interfaces;
 using Infrastructure.Services.Interfaces;
+using Infrastructure.Services.Reponses;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
@@ -18,7 +19,7 @@ namespace backend_english.Controllers
             this.vocabService = vocabService;
         }
 
-        [HttpGet]
+        [HttpGet("full")]
         public async Task<IActionResult> GetVocabDefinitions(string vocab)
         {
             if (string.IsNullOrEmpty(vocab))
@@ -26,15 +27,15 @@ namespace backend_english.Controllers
                 return BadRequest(new ApiResponse<string>(400, "Error: Vocab should not be empty", null));
             }
             vocab = vocab.Trim();
-            var defintions = await vocabService.GetShortMeaningVocabAsync(vocab);
+            var defintions = await vocabService.GetFullMeaningsVocabAsync(vocab);
             if (defintions == null)
             {
                 return NotFound(new ApiResponse<string>(404, $"No definitions found for '{vocab}'", null));
             }
-            return Ok(new ApiResponse<List<Vocab>>(200, "Success", defintions.ToList()));
+            return Ok(new ApiResponse<VocabResponse>(200, "Success", defintions));
         }
 
-        [HttpGet]
+        [HttpGet("main")]
         public async Task<IActionResult> GetVocabMainDefinition(string vocab)
         {
             if (string.IsNullOrEmpty(vocab))
@@ -47,7 +48,7 @@ namespace backend_english.Controllers
             {
                 return NotFound(new ApiResponse<string>(404, $"No definitions found for '{vocab}'", null));
             }
-            return Ok(new ApiResponse<Vocab>(200, "Success", defintions));
+            return Ok(new ApiResponse<VocabResponse>(200, "Success", defintions));
         }
     }
 }

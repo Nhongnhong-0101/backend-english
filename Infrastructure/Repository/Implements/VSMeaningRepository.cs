@@ -3,11 +3,6 @@ using Dapper;
 using Infrastructure.Repository.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Repository.Implements
 {
@@ -45,7 +40,7 @@ namespace Infrastructure.Repository.Implements
         {
             try
             {
-                string command = "select * from vocab_sub_meaning where vocab_id =@VocabId";
+                string command = "select * from vocab_sub_meaning WHERE vocab_id = @VocabId";
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();

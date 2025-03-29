@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,15 +15,15 @@ namespace Core.Models
         public string meaningEn { get; set; }
         public string meaningVi { get; set; }
         public string example { get; set; }
-        public string vocab { get; set; }
-        public string imageUrl { get; set; } //It is not necessary,  just empty strin 
+        public string audioUrl { get; set; }
+        public string? imageUrl { get; set; }
 
         public VocabSubMeaning()
         {
 
         }
 
-        public VocabSubMeaning(Guid meaningId, Guid vocabId, string partOfSpeech, string meaningEn, string meaningVi, string example, string word, string imageUrl)
+        public VocabSubMeaning(Guid meaningId, Guid vocabId, string partOfSpeech, string meaningEn, string meaningVi, string example, string audioUrl, string imageUrl)
         {
             this.meaningId = meaningId;
             this.vocabId = vocabId;
@@ -30,7 +31,7 @@ namespace Core.Models
             this.meaningEn = meaningEn;
             this.meaningVi = meaningVi;
             this.example = example;
-            vocab = word;
+            this.audioUrl = audioUrl;
             this.imageUrl = imageUrl;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Core.Models;
+using Infrastructure.Services.Reponses;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +10,7 @@ namespace Infrastructure.Services.Interfaces
 {
     public interface IVocabService
     {
-        public Task<Vocab> GetFullMeaningsVocabAsync(string vocab);
+        public Task<VocabResponse> GetFullMeaningsVocabAsync(string vocab);
         public Task<IEnumerable<Vocab>> GetShortMeaningVocabAsync( string vocab);
 
     }
