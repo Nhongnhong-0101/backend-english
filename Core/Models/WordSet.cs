@@ -14,7 +14,7 @@ namespace Core.Models
         public DateTime updatedAt {get; set;}
         public Guid accountId { get; set; }
         public bool isStar { get; set; }
-
+         
         public WordSet() { }
         public WordSet(Guid wordsetId, string name, string imageUrl, DateTime updatedAt, Guid acoountId, bool isStar)
         {
