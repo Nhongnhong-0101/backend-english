@@ -8,19 +8,22 @@ namespace Core.Models
 {
     public class WordSet
     {
-        private Guid wordsetId;
-        private string name;
-        private string imageUrl;
-        private DateTime updatedAt;
-        private Guid userId;
+        public Guid wordsetId {get; set;}
+        public string nameSet {get; set;}
+        public string imageUrl {get; set;}
+        public DateTime updatedAt {get; set;}
+        public Guid accountId { get; set; }
+        public bool isStar { get; set; }
 
-        public WordSet(Guid wordsetId, string name, string imageUrl, DateTime updatedAt, Guid userId)
+        public WordSet() { }
+        public WordSet(Guid wordsetId, string name, string imageUrl, DateTime updatedAt, Guid acoountId, bool isStar)
         {
             this.wordsetId = wordsetId;
-            this.name = name;
+            this.nameSet = name;
             this.imageUrl = imageUrl;
             this.updatedAt = updatedAt;
-            this.userId = userId;
+            this.accountId = accountId;
+            this.isStar = isStar;
         }
     }
 }
