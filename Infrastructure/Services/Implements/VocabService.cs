@@ -97,6 +97,21 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
+        public Task<VocabResponse> GetMeaningsOfVocabFromApi(string vocab)
+        {
+            try
+            {
+                VocabResponse response = new VocabResponse();
+                response.Vocab = vocab;
+
+
+                return Task.FromResult(response);
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
 
         public Task<IEnumerable<Vocab>> GetShortMeaningVocabAsync(string vocab)
         {
