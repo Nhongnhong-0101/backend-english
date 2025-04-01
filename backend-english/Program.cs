@@ -27,8 +27,12 @@ namespace backend_english
             builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
             builder.Services.AddSingleton<IVocabRepository, VocabRepository>();
             builder.Services.AddSingleton<IVSMeaningRepository, VSMeaningRepository>();
+            builder.Services.AddSingleton<IWSRepository, WSRepository>();
 
             builder.Services.AddSingleton<IVocabService, VocabService>();
+            builder.Services.AddSingleton<IWSService, WSService>();
+            builder.Services.AddSingleton<IAccountService, AccountService>();
+
             // Add services to the container.
 
 

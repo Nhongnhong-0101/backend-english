@@ -27,7 +27,7 @@ namespace Infrastructure.Repository.Implements
                     await connect.OpenAsync();
                     using (var cmd = new NpgsqlCommand(command, connect))
                     {
-                        cmd.Parameters.AddWithValue("@wordset_id", wordSet.wordsetId);
+                        cmd.Parameters.AddWithValue("@wordset_id", Guid.NewGuid());
                         cmd.Parameters.AddWithValue("@name_set", wordSet.nameSet);
                         cmd.Parameters.AddWithValue("@image_url", (object?)wordSet.imageUrl?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@updated_at", DateTime.UtcNow);

@@ -23,14 +23,14 @@ namespace backend_english.Controllers
             try
             {
                 if (accountId == Guid.Empty)
-                    return BadRequest(new ApiResponse<string>(400, "Error: Please check account ID", null));
+                    return BadRequest(new ApiResponse<string>(400, "Errorrr: Please check account ID", null));
 
                 var wordSets = await wSService.GetWordSetsOfAccountAsync(accountId);
                 return Ok(new ApiResponse<IEnumerable<WordSet>>(200, null, wordSets));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Erro with service" + ex.Message);
+                return StatusCode(500, "Error with service" + ex.Message);
             }
         }
 
@@ -50,7 +50,7 @@ namespace backend_english.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Erro with service" + ex.Message);
+                return StatusCode(500, "Error with service" + ex.Message);
             }
         }
 
@@ -67,7 +67,7 @@ namespace backend_english.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Erro with service" + ex.Message);
+                return StatusCode(500, "Error with service" + ex.Message);
             }
         }
 
@@ -86,7 +86,7 @@ namespace backend_english.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, "Erro with service" + ex.Message);
+                return StatusCode(500, "Error with service" + ex.Message);
             }
         }
 
@@ -103,7 +103,7 @@ namespace backend_english.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error deleting WordSet: {ex.Message}");
+                return StatusCode(500, $"Errorr deleting WordSet: {ex.Message}");
             }
         }
 
@@ -120,7 +120,7 @@ namespace backend_english.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error retrieving vocabs: {ex.Message}");
+                return StatusCode(500, $"Errorr retrieving vocabs: {ex.Message}");
             }
         }
 
@@ -136,7 +136,7 @@ namespace backend_english.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Error adding vocabs: {ex.Message}");
+                return StatusCode(500, $"Errorr adding vocabs: {ex.Message}");
             }
         }
     }

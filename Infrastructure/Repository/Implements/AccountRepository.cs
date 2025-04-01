@@ -16,9 +16,9 @@ namespace Infrastructure.Repository.Implements
     public class AccountRepository : IAccountRepository
     {
         private readonly string connectionString;
-        public AccountRepository()
+        public AccountRepository(IConfiguration configuration)
         {
-            connectionString = DatabaseConfig.getConnectionString();
+            this.connectionString = configuration.GetConnectionString("Supabase");
         }
         public async Task<Account?> AddNewAccountAsync(Account newAccount)
         {
@@ -33,7 +33,7 @@ namespace Infrastructure.Repository.Implements
                         "RETURNING *;";
                     using (var cmd = new NpgsqlCommand(sql, connection))
                     {
-                        cmd.Parameters.AddWithValue("@account_id", newAccount.accountId);
+                        cmd.Parameters.AddWithValue("@account_id", Guid.NewGuid());
                         cmd.Parameters.AddWithValue("@full_name", newAccount.fullName);
                         cmd.Parameters.AddWithValue("@avatar_url", newAccount.avatarUrl);
                         cmd.Parameters.AddWithValue("@email", newAccount.email);
@@ -62,7 +62,7 @@ namespace Infrastructure.Repository.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to Save new account: " + ex.Message);
+                throw;
             }
         }
 
@@ -73,7 +73,7 @@ namespace Infrastructure.Repository.Implements
                 using (var connection = new NpgsqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    var sql = "select account_id, full_name, avatar_url, email, password_hash, created_at, role)" +
+                    var sql = "select account_id, full_name, avatar_url, email, password_hash, created_at, role" +
                         " from account where email = @Email";
                     using (var cmd = new NpgsqlCommand(sql, connection))
                     {
@@ -100,7 +100,7 @@ namespace Infrastructure.Repository.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to get account: " + ex.Message);
+                throw;
             }
 
         }
@@ -111,7 +111,7 @@ namespace Infrastructure.Repository.Implements
                 using (var connection = new NpgsqlConnection(connectionString))
                 {
                     await connection.OpenAsync();
-                    var sql = "select account_id, full_name, avatar_url, email, password_hash, created_at, role)" +
+                    var sql = "select account_id, full_name, avatar_url, email, password_hash, created_at, role" +
                         " from account where account_id = @Id";
                     using (var cmd = new NpgsqlCommand(sql, connection))
                     {
@@ -138,7 +138,7 @@ namespace Infrastructure.Repository.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to get account: " + ex.Message);
+                throw ;
             }
         }
 
@@ -177,12 +177,13 @@ namespace Infrastructure.Repository.Implements
                             if (await reader.ReadAsync())
                             {
                                 Account account = new Account();
-                                account.fullName = reader.GetString(0);
-                                account.avatarUrl = reader.GetString(1);
-                                account.email = reader.GetString(2);
-                                account.passwordHash = reader.GetString(3);
-                                account.createdAt = reader.GetDateTime(4);
-                                account.role = reader.GetString(5);
+                                account.accountId = reader.GetGuid(0);
+                                account.fullName = reader.GetString(1);
+                                account.avatarUrl = reader.GetString(2);
+                                account.email = reader.GetString(3);
+                                account.passwordHash = reader.GetString(4);
+                                account.createdAt = reader.GetDateTime(5);
+                                account.role = reader.GetString(6);
 
                                 return account;
                             }
@@ -193,7 +194,7 @@ namespace Infrastructure.Repository.Implements
             }
             catch (Exception ex)
             {
-                throw new Exception("Failed to update account: "+ ex.Message);
+                throw ;
             }
         }
     }
