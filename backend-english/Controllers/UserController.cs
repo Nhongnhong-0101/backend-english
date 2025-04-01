@@ -1,4 +1,5 @@
-﻿using Infrastructure.Repository;
+﻿using Core.Models;
+using Infrastructure.Repository;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,16 +9,24 @@ namespace backend_english.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IUserRepository _userRepository;
-        public UserController(IUserRepository userRepository)
+        private readonly IAccountRepository accountRepository;
+        public UserController(IAccountRepository accountRepository)
         {
-            _userRepository = userRepository;
+            this.accountRepository = accountRepository;
         }
         [HttpGet]
         public async Task<IActionResult> GetUsers()
         {
-            var users = await _userRepository.GetUserByEmail("nhih");
-            return Ok(users);
+            var acc = await accountRepository.GetAccountByEmail("nhih");
+            return Ok(acc);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddNewUsers()
+        {
+            Account acc = new Account();
+            var newAcc = await accountRepository.AddNewAccount(acc);
+            return Ok(newAcc);
         }
     }
 }

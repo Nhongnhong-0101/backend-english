@@ -24,7 +24,7 @@ namespace backend_english
 
 
             //register repositories
-            builder.Services.AddSingleton<IUserRepository, UserRepository>();
+            builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
             builder.Services.AddSingleton<IVocabRepository, VocabRepository>();
             builder.Services.AddSingleton<IVSMeaningRepository, VSMeaningRepository>();
 
