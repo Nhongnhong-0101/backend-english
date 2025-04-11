@@ -1,6 +1,4 @@
-﻿using Core.Models;
-using Infrastructure.Repository;
-using Infrastructure.Repository.Interfaces;
+﻿using backend_english.Response;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.Services.Reponses;
 using Microsoft.AspNetCore.Http;
@@ -19,7 +17,7 @@ namespace backend_english.Controllers
             this.vocabService = vocabService;
         }
 
-        [HttpGet("full")]
+        [HttpGet("full/{vocab}")]
         public async Task<IActionResult> GetVocabDefinitions(string vocab)
         {
             if (string.IsNullOrEmpty(vocab))

@@ -66,6 +66,44 @@ namespace Infrastructure.Repository.Implements
             }
         }
 
+        public async Task<Account?> CheckLoginAccount(string email, string password)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(connectionString))
+                {
+                    await connection.OpenAsync();
+                    var sql = "select account_id, full_name, avatar_url, email, password_hash, created_at, role from account where email = @Email and password_hash = @Password";
+                    using (var cmd = new NpgsqlCommand(sql, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@Email", email);
+                        cmd.Parameters.AddWithValue("@Password", password);
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                Account account = new Account();
+                                account.accountId = reader.GetGuid(0);
+                                account.fullName = reader.GetString(1);
+                                account.avatarUrl = reader.GetString(2);
+                                account.email = reader.GetString(3);
+                                account.passwordHash = reader.GetString(4);
+                                account.createdAt = reader.GetDateTime(5);
+                                account.role = reader.GetString(6);
+
+                                return account;
+                            }
+                        }
+                    }
+                    return null;
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
         public async Task<Account?>  GetAccountByEmailAsync(string email)
         {
             try

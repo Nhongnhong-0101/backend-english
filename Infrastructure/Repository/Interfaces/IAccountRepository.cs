@@ -13,5 +13,6 @@ namespace Infrastructure.Repository
         Task<Account?> GetAccountByEmailAsync(string email);
         Task<Account?> AddNewAccountAsync(Account newAccount);
         Task<Account> UpdateAccountAsync(Account updatedAccount);
+        Task<Account?> CheckLoginAccount (string email, string password); 
     }
 }

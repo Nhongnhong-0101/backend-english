@@ -42,7 +42,7 @@ namespace Infrastructure.Repository.Implements
             }
             catch (Exception ex)
             {
-                throw ex;
+                throw;
             }
         }
     }
