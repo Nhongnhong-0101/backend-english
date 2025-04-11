@@ -2,7 +2,8 @@
 {
     public class AuthResponse
     {
-        public string token { get; set; }
+        public string Token { get; set; }
+        public DateTime ExpiresAt { get; set; }
 
         public AuthResponse() { }
     }

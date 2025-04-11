@@ -27,7 +27,7 @@ namespace backend_english.Controllers
             var token = await authService.LoginAccount(user.email, user.password);
             if (!string.IsNullOrEmpty(token))
             {
-                return Ok(new ApiResponse<string>(200, null, token));
+                return Ok(new ApiResponse<AuthResponse>(200, null, new AuthResponse { Token = token, ExpiresAt = DateTime.UtcNow.AddHours(24) }));
             }
             return Unauthorized();
         }
