@@ -1,14 +1,11 @@
-﻿using Infrastructure.Repository;
+﻿using Core.Models;
+using Infrastructure.Repository;
 using Infrastructure.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Security.Claims;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Infrastructure.Services.Implements
 {
@@ -66,9 +63,31 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public Task<string> RegisterAccount(string username, string password)
+        public async Task<string> RegisterAccount(string fullName, string email, string password)
         {
-            throw new NotImplementedException();
+            try
+            {
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+                Account account = new Account();
+                account.fullName = fullName;
+                account.email = email;
+                account.passwordHash = hashedPassword;
+
+                var saved = await accountRepository.AddNewAccountAsync(account);
+                if (saved != null)
+                {
+                    var token = GenerateJwtToken(saved.email);
+                    if (!string.IsNullOrEmpty(token))
+                    {
+                        return token;
+                    }
+                }
+                return null;
+            }
+            catch
+            {
+                throw;
+            }
         }
 
       

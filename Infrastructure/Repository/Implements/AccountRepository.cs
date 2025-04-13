@@ -35,7 +35,7 @@ namespace Infrastructure.Repository.Implements
                     {
                         cmd.Parameters.AddWithValue("@account_id", Guid.NewGuid());
                         cmd.Parameters.AddWithValue("@full_name", newAccount.fullName);
-                        cmd.Parameters.AddWithValue("@avatar_url", newAccount.avatarUrl);
+                        cmd.Parameters.AddWithValue("@avatar_url", "Unknown");
                         cmd.Parameters.AddWithValue("@email", newAccount.email);
                         cmd.Parameters.AddWithValue("@password_hash", newAccount.passwordHash);
                         cmd.Parameters.AddWithValue("@created_at", DateTime.UtcNow);
