@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using System.Text;
+using Amazon.Lambda.AspNetCoreServer.Hosting;
 
 namespace backend_english
 {
@@ -37,6 +38,7 @@ namespace backend_english
             builder.Services.AddSingleton<IAccountService, AccountService>();
             builder.Services.AddSingleton<IAuthService, AuthService>();
 
+            builder.Logging.AddLambdaLogger();
             // Add services to the container.
 
 
@@ -45,6 +47,7 @@ namespace backend_english
                 options.JsonSerializerOptions.PropertyNamingPolicy = null; // Giữ nguyên tên thuộc tính
                 options.JsonSerializerOptions.WriteIndented = true; // Format JSON dễ đọc
             });
+
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

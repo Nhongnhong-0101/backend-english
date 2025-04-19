@@ -1,0 +1,18 @@
+{
+  "Information": [
+    "This file is used by the Amazon Lambda Tools for .NET to deploy your function to AWS Lambda."
+  ],
+  "profile": "default", // AWS Profile used for deployment
+  "region": "ap-southeast-2",
+  "configuration": "Release",
+  "framework": "net8.0",
+  "function-runtime": "dotnet8", // AWS Region where your Lambda function will be deployed
+  "function-memory-size": 256, // Amount of memory (MB) allocated for the Lambda function
+  "function-timeout": 30,
+  "function-handler": "backend_english::backend_english.LambdaFunction::FunctionHandlerAsync", // Timeout (in seconds) for the Lambda function
+  "function-role": "arn:aws:iam::396913737295:role/DeployAPIToLamda", // IAM Role ARN used by Lambda
+  "template": "serverless.template",
+  "stack-name": "nhi-backend-stack", // CloudFormation stack name
+  "function-name": "nhi-backend-function", // Lambda function name
+  "s3-bucket": "be-len" // S3 bucket name for deployment
+}

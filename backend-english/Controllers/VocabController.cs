@@ -17,14 +17,14 @@ namespace backend_english.Controllers
             this.vocabService = vocabService;
         }
 
-        [HttpGet("full/{vocab}")]
+        [HttpGet("full-definitions/{vocab}")]
         public async Task<IActionResult> GetVocabDefinitions(string vocab)
         {
+            vocab = vocab.Trim();
             if (string.IsNullOrEmpty(vocab))
             {
                 return BadRequest(new ApiResponse<string>(400, "Error: Vocab should not be empty", null));
             }
-            vocab = vocab.Trim();
             var defintions = await vocabService.GetFullMeaningsVocabAsync(vocab);
             if (defintions == null)
             {
@@ -33,14 +33,14 @@ namespace backend_english.Controllers
             return Ok(new ApiResponse<VocabResponse>(200, "Success", defintions));
         }
 
-        [HttpGet("main")]
+        [HttpGet("main-definition/{vocab}")]
         public async Task<IActionResult> GetVocabMainDefinition(string vocab)
         {
+            vocab = vocab.Trim();
             if (string.IsNullOrEmpty(vocab))
             {
                 return BadRequest(new ApiResponse<string>(400, "Error: Vocab should not be empty", null));
             }
-            vocab = vocab.Trim();
             var defintions = await vocabService.GetFullMeaningsVocabAsync(vocab);
             if (defintions == null)
             {

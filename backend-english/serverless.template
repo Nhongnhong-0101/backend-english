@@ -1,0 +1,25 @@
+﻿AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: ASP.NET Core Web API of BE_LEN using .NET 8
+
+Resources:
+  BackendEnglishApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: backend_english.LambdaFunction::FunctionHandlerAsync
+      Runtime: dotnet8
+      CodeUri: ./output
+      MemorySize: 256
+      Timeout: 30
+      Role: arn:aws:iam::396913737295:role/DeployAPIToLamda
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            Path: /
+            Method: ANY
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
