@@ -49,10 +49,10 @@ namespace backend_english.Controllers
                     var duplicate = await accountService.GetAccountByEmailAsync(acc.email);
                     if (duplicate == null)
                     {
-                        var token = await authService.RegisterAccount(acc.fullName, acc.email, acc.plainPassword);
-                        if (!string.IsNullOrEmpty(token))
+                        var code = await authService.RegisterAccount(acc.fullName, acc.email, acc.plainPassword);
+                        if (!string.IsNullOrEmpty(code))
                         {
-                            return Ok(new ApiResponse<AuthResponse>(200, null, new AuthResponse { Token = token, ExpiresAt = DateTime.UtcNow.AddHours(24) }));
+                            return Ok(new ApiResponse<AuthResponse>(200, null, new AuthResponse { Token = null, ExpiresAt = DateTime.UtcNow.AddHours(24), Code = code }));
                         }
                         return Unauthorized();
                     }

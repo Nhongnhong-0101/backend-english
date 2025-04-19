@@ -31,6 +31,8 @@ namespace backend_english
             builder.Services.AddSingleton<IVocabRepository, VocabRepository>();
             builder.Services.AddSingleton<IVSMeaningRepository, VSMeaningRepository>();
             builder.Services.AddSingleton<IWSRepository, WSRepository>();
+            builder.Services.AddSingleton<IEmailTemplateRepository, EmailTemplateRepository>();
+
 
             builder.Services.AddSingleton<IVocabService, VocabService>();
             builder.Services.AddSingleton<IWSService, WSService>();
