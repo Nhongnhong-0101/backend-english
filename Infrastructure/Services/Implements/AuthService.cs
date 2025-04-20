@@ -123,47 +123,47 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
-        public async Task SendEmailAsync(MailData mailData, string toEmail)
-        {
-            try
+            public async Task SendEmailAsync(MailData mailData, string toEmail)
             {
-                mailSetting.Host = configuration.GetValue<string>("MailSettings:Host");
-                mailSetting.Port = configuration.GetValue<int>("MailSettings:Port");
-                mailSetting.Name = configuration.GetValue<string>("MailSettings:Name");
-                mailSetting.SenderEmail = configuration.GetValue<string>("MailSettings:SenderEmail");
-                mailSetting.UserName = configuration.GetValue<string>("MailSettings:Username");
-                mailSetting.Password = configuration.GetValue<string>("MailSettings:Password");
-                mailSetting.UseSSL = configuration.GetValue<bool>("MailSettings:UseSSL");
-                bool isValid = !string.IsNullOrWhiteSpace(mailSetting.Host)
-                    && mailSetting.Port > 0
-                    && !string.IsNullOrWhiteSpace(mailSetting.Name)
-                    && !string.IsNullOrWhiteSpace(mailSetting.SenderEmail)
-                    && !string.IsNullOrWhiteSpace(mailSetting.Password);
-                if (isValid) 
+                try
                 {
-                    var client = new SmtpClient(mailSetting.Host, mailSetting.Port)
+                    mailSetting.Host = configuration.GetValue<string>("MailSettings:Host");
+                    mailSetting.Port = configuration.GetValue<int>("MailSettings:Port");
+                    mailSetting.Name = configuration.GetValue<string>("MailSettings:Name");
+                    mailSetting.SenderEmail = configuration.GetValue<string>("MailSettings:SenderEmail");
+                    mailSetting.UserName = configuration.GetValue<string>("MailSettings:Username");
+                    mailSetting.Password = configuration.GetValue<string>("MailSettings:Password");
+                    mailSetting.UseSSL = configuration.GetValue<bool>("MailSettings:UseSSL");
+                    bool isValid = !string.IsNullOrWhiteSpace(mailSetting.Host)
+                        && mailSetting.Port > 0
+                        && !string.IsNullOrWhiteSpace(mailSetting.Name)
+                        && !string.IsNullOrWhiteSpace(mailSetting.SenderEmail)
+                        && !string.IsNullOrWhiteSpace(mailSetting.Password);
+                    if (isValid) 
                     {
-                        Credentials = new NetworkCredential(mailSetting.UserName, mailSetting.Password),
-                        EnableSsl = mailSetting.UseSSL
-                    };
+                        var client = new SmtpClient(mailSetting.Host, mailSetting.Port)
+                        {
+                            Credentials = new NetworkCredential(mailSetting.UserName, mailSetting.Password),
+                            EnableSsl = mailSetting.UseSSL,
+                        };
+                    
+                        var mailMessage = new MailMessage
+                        {
+                            From = new MailAddress(mailSetting.SenderEmail, mailSetting.Name),
+                            Subject = mailData.EmailSubject,
+                            Body = mailData.EmailBody,
+                            IsBodyHtml = true
+                        };
 
-                    var mailMessage = new MailMessage
-                    {
-                        From = new MailAddress(mailSetting.SenderEmail, mailSetting.Name),
-                        Subject = mailData.EmailSubject,
-                        Body = mailData.EmailBody,
-                        IsBodyHtml = true
-                    };
-
-                    mailMessage.To.Add(toEmail);
-                    await client.SendMailAsync(mailMessage);
+                        mailMessage.To.Add(new MailAddress(toEmail));
+                        await client.SendMailAsync(mailMessage);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw;
                 }
             }
-            catch (Exception ex)
-            {
-                throw;
-            }
-        }
 
         public string GenerateCode()
         {
