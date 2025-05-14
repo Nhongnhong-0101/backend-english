@@ -1,9 +1,6 @@
 ﻿using backend_english.Response;
 using Core.Models;
-using Infrastructure.Repository;
-using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend_english.Controllers

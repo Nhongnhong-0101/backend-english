@@ -7,7 +7,7 @@ using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Npgsql;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace backend_english
@@ -25,7 +25,10 @@ namespace backend_english
                 throw new Exception("❌ Không tìm thấy connection string trong appsettings.json");
             }
 
-
+            builder.WebHost.ConfigureKestrel(options =>
+            {
+                options.ListenAnyIP(80); // chỉ HTTP, không có HTTPS
+            });
             //register repositories
             builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
             builder.Services.AddSingleton<IVocabRepository, VocabRepository>();
@@ -99,16 +102,15 @@ namespace backend_english
 
             );
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
-            var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            var app = builder.Build();
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
