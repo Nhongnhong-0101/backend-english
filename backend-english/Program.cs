@@ -27,7 +27,7 @@ namespace backend_english
 
             builder.WebHost.ConfigureKestrel(options =>
             {
-                options.ListenAnyIP(80); // chỉ HTTP, không có HTTPS
+                options.ListenAnyIP(5000); // chỉ HTTP, không có HTTPS
             });
             //register repositories
             builder.Services.AddSingleton<IAccountRepository, AccountRepository>();
@@ -41,6 +41,7 @@ namespace backend_english
             builder.Services.AddSingleton<IWSService, WSService>();
             builder.Services.AddSingleton<IAccountService, AccountService>();
             builder.Services.AddSingleton<IAuthService, AuthService>();
+            builder.Services.AddSingleton<IValueService, ValueService>();
 
             // Add services to the container.
 
