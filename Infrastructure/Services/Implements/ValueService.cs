@@ -19,6 +19,7 @@ namespace Infrastructure.Services.Implements
     {
         private string apiKey = string.Empty;
         private string region = string.Empty;
+        private string filePath = string.Empty;
         public ValueService(IConfiguration configuration)
         {
             apiKey = configuration["Speech_api:Access_pronounciation"];
@@ -52,7 +53,7 @@ namespace Infrastructure.Services.Implements
         {
             try
             {
-                var filePath = Path.GetTempFileName();
+                filePath = Path.GetTempFileName();
                 using (var stream = System.IO.File.Create(filePath))
                 {
                     await audio.CopyToAsync(stream);
@@ -61,20 +62,19 @@ namespace Infrastructure.Services.Implements
                 {
                     SpeechConfig speechConfig = SpeechConfig.FromSubscription(apiKey, region);
                     speechConfig.SpeechRecognitionLanguage = "en-US";
-                    var audioConfig = AudioConfig.FromWavFileInput(filePath);
-                    var pronunciationConfig = new PronunciationAssessmentConfig(
+                        var pronunciationConfig = new PronunciationAssessmentConfig(
                         sentence,
                       GradingSystem.HundredMark,
                       Granularity.Word,
                       true);
                     pronunciationConfig.EnableProsodyAssessment();
+                    using (var audioConfig = AudioConfig.FromWavFileInput(filePath))
                     using (var recognizer = new SpeechRecognizer(speechConfig, audioConfig))
                     {
                         pronunciationConfig.ApplyTo(recognizer);
                         var speechRecognitionResult = await recognizer.RecognizeOnceAsync();
                         var pronunciationAssessmentResult = PronunciationAssessmentResult.FromResult(speechRecognitionResult);
                         var pronunciationAssessmentResultJson = speechRecognitionResult.Properties.GetProperty(PropertyId.SpeechServiceResponse_JsonResult);
-                        System.IO.File.Delete(filePath);
 
                         var result = JsonConvert.DeserializeObject<PronounciationResponse>(pronunciationAssessmentResultJson);
                         var nBest = result.NBest.First();
@@ -87,6 +87,7 @@ namespace Infrastructure.Services.Implements
                             wr.Word = w.WordText;
                             wr.Score = w.PronunciationAssessment.AccuracyScore;
                             wr.ErrorType = w.PronunciationAssessment.ErrorType;
+                            wordResults.Add(wr);
                         }
 
                         var response = new AssessmentResponse();
@@ -98,6 +99,7 @@ namespace Infrastructure.Services.Implements
                         response.PronScore = assessment.PronScore;
                         response.Words = wordResults;
                         ;
+
                         return response;
                     }
                 }
@@ -105,7 +107,13 @@ namespace Infrastructure.Services.Implements
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"sendToAzure error: {ex.Message}");
                 return null;
+            }
+            finally
+            {
+                if (System.IO.File.Exists(filePath))
+                    System.IO.File.Delete(filePath);
             }
         }
     }
