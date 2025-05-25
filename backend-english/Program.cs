@@ -42,6 +42,7 @@ namespace backend_english
             builder.Services.AddSingleton<IAccountService, AccountService>();
             builder.Services.AddSingleton<IAuthService, AuthService>();
             builder.Services.AddSingleton<IValueService, ValueService>();
+            builder.Services.AddSingleton<IChatbotService, ChatbotService>();
 
             // Add services to the container.
 

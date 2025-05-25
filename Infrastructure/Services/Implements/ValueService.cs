@@ -114,6 +114,7 @@ namespace Infrastructure.Services.Implements
             {
                 if (System.IO.File.Exists(filePath))
                     System.IO.File.Delete(filePath);
+                filePath = String.Empty;
             }
         }
     }
