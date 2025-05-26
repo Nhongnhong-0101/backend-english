@@ -53,12 +53,14 @@ namespace Infrastructure.Services.Implements
 
         public async Task<string> TranscriptAudioAsync(IFormFile recored)
         {
+            var fileExtension = Path.GetExtension(recored.FileName).ToLower();
+            var filePath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}{fileExtension}");
             try
             {
-                var filePath = Path.GetTempFileName();
                 using (var stream = System.IO.File.Create(filePath))
                 {
                     await recored.CopyToAsync(stream);
+                    stream.Flush();
                 }
 
                 AudioClient client = new(
@@ -76,7 +78,7 @@ namespace Infrastructure.Services.Implements
 
             catch (Exception ex)
             {
-                return null;
+                throw new Exception( ex.Message);
             }
             finally
             {
