@@ -22,7 +22,7 @@ namespace Infrastructure.Services.Implements
         
         private string gptKey  = String.Empty;
         private string filePath = String.Empty;
-        private string direction = "You are an English tutor";
+        private string direction = "You are an English tutor, help me learn to communicate effectively.";
         private static readonly HttpClient client = new HttpClient();
 
 
@@ -42,7 +42,7 @@ namespace Infrastructure.Services.Implements
             List<ChatMessage> messages =
             [
                 new SystemChatMessage(direction),
-                new UserChatMessage("Hello!")
+                new UserChatMessage(message)
             ];
 
             ChatCompletion completion = client.CompleteChat(messages);

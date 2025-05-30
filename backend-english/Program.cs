@@ -35,6 +35,8 @@ namespace backend_english
             builder.Services.AddSingleton<IVSMeaningRepository, VSMeaningRepository>();
             builder.Services.AddSingleton<IWSRepository, WSRepository>();
             builder.Services.AddSingleton<IEmailTemplateRepository, EmailTemplateRepository>();
+            builder.Services.AddSingleton<IUSResultRepository, USResultRepository>();
+            builder.Services.AddSingleton<ISQuestionRepository, SQuestionRepository>();
 
 
             builder.Services.AddSingleton<IVocabService, VocabService>();
@@ -43,6 +45,8 @@ namespace backend_english
             builder.Services.AddSingleton<IAuthService, AuthService>();
             builder.Services.AddSingleton<IValueService, ValueService>();
             builder.Services.AddSingleton<IChatbotService, ChatbotService>();
+            builder.Services.AddSingleton<IUSResultService, USResultService>();
+            builder.Services.AddSingleton<ISQuestionService,SQuestionService>();
 
             // Add services to the container.
 
