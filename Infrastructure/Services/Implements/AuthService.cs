@@ -30,8 +30,9 @@ namespace Infrastructure.Services.Implements
         {
             try
             {
-                var account = await accountRepository.CheckLoginAccount(username, password);
-                if (account != null)
+                var account = await accountRepository.GetAccountByEmailAsync(username);
+                bool isValid = BCrypt.Net.BCrypt.Verify(password, account.passwordHash);
+                if (isValid)
                 {
                     var token = GenerateJwtToken(account.email);
                     if (!string.IsNullOrEmpty(token))
@@ -118,7 +119,7 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
-            public async Task SendEmailAsync(MailData mailData, string toEmail)
+        public async Task SendEmailAsync(MailData mailData, string toEmail)
             {
                 try
                 {
