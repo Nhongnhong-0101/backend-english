@@ -1,6 +1,7 @@
 ﻿using Core.Models;
 using Infrastructure.Repository.Interfaces;
 using Infrastructure.Services.Interfaces;
+using Infrastructure.Services.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,7 +43,7 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public async Task<Dictionary<string, (int total, int practiced)>> GetUserResultEachTopicAsync(Guid accountId)
+        public async Task<Dictionary<string, TopicProgress>> GetUserResultEachTopicAsync(Guid accountId)
         {
             try
             {

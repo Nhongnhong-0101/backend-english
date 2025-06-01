@@ -1,6 +1,7 @@
 ﻿using Core.Models;
 using Dapper;
 using Infrastructure.Repository.Interfaces;
+using Infrastructure.Services.Response;
 using Microsoft.CognitiveServices.Speech.Transcription;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
@@ -61,27 +62,31 @@ namespace Infrastructure.Repository.Implements
             }
         }
 
-        public async Task<Dictionary<string, (int total, int practiced)>> GetUserResultEachTopicAsync(Guid accountId)
+        public async Task<Dictionary<string, TopicProgress>> GetUserResultEachTopicAsync(Guid accountId)
         {
             try
             {
                 string commnad = "SELECT sq.topic, " +
-                    "COUNT(sq.question_id) AS total_questions, COUNT(DISTINCT usr.question_id) AS practiced_questions" +
-                    "FROM speaking_question sq" +
+                    "COUNT(sq.question_id) AS total_questions, COUNT(DISTINCT usr.question_id) AS practiced_questions " +
+                    "FROM speaking_question sq " +
                     "LEFT JOIN user_speaking_result usr " +
                     "ON sq.question_id = usr.question_id " +
-                    "AND usr.account_id = @AccountId" +
-                    "GROUP BY sq.topic" +
-                    "ORDER BY sq.topic";
+                    "AND usr.account_id = @AccountId " +
+                    "GROUP BY sq.topic " +
+                    "ORDER BY sq.topic ";
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
                     var resultSql = await connect.QueryAsync(commnad, new { AccountId = accountId });
 
-                    var result = new Dictionary<string, (int, int)>();
+                    var result = new Dictionary<string, TopicProgress>();
                     foreach (var row in resultSql)
                     {
-                        result[row.topic] = ((int)row.total_questions, (int)row.practiced_questions);
+                        result[row.topic] = new TopicProgress
+                        {
+                            Total = (int)row.total_questions,
+                            Practiced = (int)row.practiced_questions
+                        };
                     }
                     return result;
 

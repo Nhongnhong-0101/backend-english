@@ -2,6 +2,7 @@
 using Core.Models;
 using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
+using Infrastructure.Services.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +24,7 @@ namespace backend_english.Controllers
         public async Task<IActionResult> GetAllTopicsWithProgress([FromQuery] Guid accountId)
         {
             var result = await questionService.GetUserTopicProgressAsync(accountId);
-            return Ok(new ApiResponse<Dictionary<string, (int, int)>>(200, null, result));
+            return Ok(new ApiResponse<Dictionary<string, TopicProgress>>(200, null, result));
         }
 
         [HttpGet("topic-questions")]

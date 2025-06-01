@@ -1,4 +1,5 @@
 ﻿using Core.Models;
+using Infrastructure.Services.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,6 @@ namespace Infrastructure.Services.Interfaces
         public Task<IEnumerable<UserSpeakingResult>> GetResultsOfUserAsync(Guid userId);
         public Task<IEnumerable<UserSpeakingResult>> GetResultsOfUserByTopicAsync(Guid userId, string topic);
         public Task<IEnumerable<UserSpeakingResult>> SaveResultOfUserAsync(UserSpeakingResult result);
-        public Task<Dictionary<string, (int total, int practiced)>> GetUserResultEachTopicAsync(Guid accountId);
+        public Task<Dictionary<string, TopicProgress>> GetUserResultEachTopicAsync(Guid accountId);
     }
 }

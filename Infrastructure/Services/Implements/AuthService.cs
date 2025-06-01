@@ -71,24 +71,19 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public async Task<string> RegisterAccount(string fullName, string toEmail, string password)
+        public async Task<string> RegisterAccount(string fullName, string Email, string password)
         {
             try
             {
                 string hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
                 Account account = new Account();
                 account.fullName = fullName;
-                account.email = toEmail;
+                account.email = Email;
                 account.passwordHash = hashedPassword;
-
-                var code = await SendRegisterVerificationEmail(toEmail);
-                if (!string.IsNullOrEmpty(code))
+                var saved = await accountRepository.AddNewAccountAsync(account);
+                if (saved != null)
                 {
-                    var saved = await accountRepository.AddNewAccountAsync(account);
-                    if (saved != null)
-                    {
-                        return code;
-                    }
+                    return "Account created successfully";
                 }
                 return null;
             }

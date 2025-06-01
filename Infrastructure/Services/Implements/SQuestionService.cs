@@ -2,6 +2,7 @@
 using Infrastructure.Repository.Implements;
 using Infrastructure.Repository.Interfaces;
 using Infrastructure.Services.Interfaces;
+using Infrastructure.Services.Response;
 using Npgsql;
 using System;
 using System.Collections.Generic;
@@ -84,7 +85,7 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public async Task<Dictionary<string, (int, int)>> GetUserTopicProgressAsync(Guid accountId)
+        public async Task<Dictionary<string, TopicProgress>> GetUserTopicProgressAsync(Guid accountId)
         {
             try
             {

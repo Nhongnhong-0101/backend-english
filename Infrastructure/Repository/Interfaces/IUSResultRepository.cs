@@ -1,4 +1,5 @@
 ﻿using Core.Models;
+using Infrastructure.Services.Response;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Infrastructure.Repository.Interfaces
         //luu ket qua nguwoi dung
         public Task<IEnumerable<UserSpeakingResult>> SaveResultOfUserAsync(UserSpeakingResult result);
 
-        public Task<Dictionary<string, (int total, int practiced)>> GetUserResultEachTopicAsync(Guid accountId);
+        public Task<Dictionary<string, TopicProgress>> GetUserResultEachTopicAsync(Guid accountId);
 
     }
 }
