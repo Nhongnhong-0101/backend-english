@@ -1,5 +1,6 @@
 ﻿using Infrastructure.Services.Response;
 using Microsoft.AspNetCore.Http;
+using OpenAI.Chat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,12 @@ namespace Infrastructure.Services.Interfaces
 {
     public interface IChatbotService
     {
-        public Task<string> SendChatMessageAsync(string message);
-        public Task<string> TranscriptAudioAsync(IFormFile recored);
-
-        public Task<ChatResponse> ProcessSpeechAsync(IFormFile recored);
+        public Task<String> StartConversationAsync(String topic);
+        public Task<String> ContinuteConversationAsync(String userInput);
+        public Task<String> ReplyUserAudio(IFormFile recored);
+        public Task<String> SendToGPTAsync(List<ChatMessage> chatHistory);
+        public Task<String> TranscriptAudioAsync(IFormFile recored);
+        public void EndConversation();
 
 
     }

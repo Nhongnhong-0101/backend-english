@@ -18,20 +18,6 @@ namespace backend_english.Controllers
             this.chatbotService = chatbotService;
         }
 
-        [HttpPost("text-to-chat")]
-        public async Task<IActionResult> SendChatMessage ( [FromBody] string sentence)
-        {
-            try
-            {
-                var response = await chatbotService.SendChatMessageAsync(sentence);
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý ");
-            }
-        }
-
         [HttpPost("transcribe-audio")]
         public async Task<IActionResult> TranscribeAudioAsync(IFormFile audio)
         {
@@ -53,14 +39,30 @@ namespace backend_english.Controllers
             catch (Exception ex) {
                 return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý file ghi âm." + ex.Message);
             }
-        }
+        }   
 
-        [HttpPost("speech-to-chat")]
-        public async Task<IActionResult> ProcessSpeech(IFormFile audio)
+
+        [HttpPost("start-conversation")]
+        public async Task<IActionResult> StartConversation([FromForm] String topic)
         {
             try
             {
-                var response = await chatbotService.ProcessSpeechAsync(audio);
+                var initialQuestion = await chatbotService.StartConversationAsync(topic);
+
+                return Ok(initialQuestion);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý chatbot");
+            }
+        }
+
+        [HttpPost("continue-conversation")]
+        public async Task<IActionResult> PracticeInTopic(IFormFile audio)
+        {
+            try
+            {
+                var response = await chatbotService.ReplyUserAudio(audio);
 
                 return Ok(response);
             }
@@ -70,5 +72,21 @@ namespace backend_english.Controllers
             }
         }
 
+        [HttpPost("end-conversation")]
+        public Task<IActionResult> EndConversation(IFormFile audio)
+        {
+            try
+            {
+                chatbotService.EndConversation();
+
+                return Task.FromResult<IActionResult>(
+                         Ok(new ApiResponse<string>(200, "End the conversation", "")));
+            }
+            catch (Exception ex)
+            {
+                return Task.FromResult<IActionResult>(
+                        StatusCode(500, "Đã xảy ra lỗi trong quá trình xử lý chatbot"));
+            }
+        }
     }
 }

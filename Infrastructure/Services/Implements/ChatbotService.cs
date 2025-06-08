@@ -25,27 +25,23 @@ namespace Infrastructure.Services.Implements
         private string direction = "You are an English tutor, help me learn to communicate effectively.";
         private static readonly HttpClient client = new HttpClient();
 
+        private List<ChatMessage> chatMessages = new List<ChatMessage>();
+
 
         public ChatbotService(IConfiguration configuration)
         {
              gptKey = configuration["GPT:Chatbot_key"];
         }
 
-        public async Task<string> SendChatMessageAsync(string message)
+        public async Task<string> SendToGPTAsync(List<ChatMessage> chatHistory)
         {
 
             ChatClient client = new(
-                model: "gpt-3.5-turbo",
+                model: "gpt-4o-mini",
                 apiKey: gptKey
             );
-
-            List<ChatMessage> messages =
-            [
-                new SystemChatMessage(direction),
-                new UserChatMessage(message)
-            ];
-
-            ChatCompletion completion = client.CompleteChat(messages);
+           
+            ChatCompletion completion = client.CompleteChat(chatHistory);
 
             Console.WriteLine(completion.Content[0].Text);
             return completion.Content[0].Text;  
@@ -88,26 +84,81 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public async Task<ChatResponse> ProcessSpeechAsync(IFormFile recored)
+        public async Task<String> StartConversationAsync(string topic)
         {
             try
             {
-                ChatResponse chat = new ChatResponse();
+                var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage($"Keep the conversation focused on the {topic}."),
+                     new UserChatMessage($"Let's start a conversation about {topic}. Give me a question to begin."),
+                };
+                var firstQuestion = await SendToGPTAsync(messages);
+                firstQuestion = CleanText(firstQuestion);
+                messages.Add(new AssistantChatMessage(firstQuestion));
 
-                var text = await TranscriptAudioAsync(recored); 
+                chatMessages.AddRange(messages);
 
-                var response = await SendChatMessageAsync(text);
-
-                
-                chat.transcribedText = text;
-                chat.responseFromAI = response;
-
-                return chat;
+                return firstQuestion;
             }
-            catch (Exception ex)
+            catch
             {
-                return new ChatResponse();
+                throw;
             }
+        }
+
+        public async Task<String> ContinuteConversationAsync(string userInput)
+        {
+            try
+            {
+                var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage($"""
+                        You are an English teacher helping a student practice conversation on the topic: {topic}.
+                    Please respond in natural, friendly, and encouraging paragraphs.
+                    Avoid using numbered lists, bullet points, or fragmented sentences.
+                    Politely correct any grammar or vocabulary errors within your response, helping the student learn without discouraging them.
+                    Use clear and simple language suitable for intermediate English learners.
+                    Keep the conversation focused on the topic, and provide questions or comments to guide the student.
+                    """),
+                     new UserChatMessage(userInput),
+                };
+                UserChatMessage userMessage = new UserChatMessage(userInput);
+                chatMessages.Add(userMessage);
+                var reply = await SendToGPTAsync(chatMessages);
+                reply = CleanText(reply);
+                chatMessages.Add(new AssistantChatMessage(reply));
+                return reply;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public void EndConversation()
+        {
+            chatMessages.Clear();
+        }
+
+        public async Task<String> ReplyUserAudio(IFormFile recored)
+        {
+            try
+            {
+                var userInput = await TranscriptAudioAsync(recored);
+                
+                return await ContinuteConversationAsync (userInput);
+
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        private string CleanText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            return text.Replace("\\n", " ").Replace("\"", "").Trim();
         }
     }
 }
