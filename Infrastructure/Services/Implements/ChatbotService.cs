@@ -23,6 +23,7 @@ namespace Infrastructure.Services.Implements
         private string gptKey  = String.Empty;
         private string filePath = String.Empty;
         private string direction = "You are an English tutor, help me learn to communicate effectively.";
+        private string mainTopic = String.Empty;
         private static readonly HttpClient client = new HttpClient();
 
         private List<ChatMessage> chatMessages = new List<ChatMessage>();
@@ -88,9 +89,17 @@ namespace Infrastructure.Services.Implements
         {
             try
             {
+                mainTopic = topic.ToLower();
                 var messages = new List<ChatMessage>
                 {
-                    new SystemChatMessage($"Keep the conversation focused on the {topic}."),
+                    new SystemChatMessage($"""
+                        You are an English teacher helping a student practice conversation on the topic: {mainTopic}.
+                    Please respond in natural, friendly, and encouraging paragraphs.
+                    Avoid using numbered lists, bullet points, or fragmented sentences.
+                    Politely correct any grammar or vocabulary errors within your response, helping the student learn without discouraging them.
+                    Use clear and simple language suitable for intermediate English learners.
+                    Keep the conversation focused on the topic, and provide questions or comments to guide the student.
+                    """),
                      new UserChatMessage($"Let's start a conversation about {topic}. Give me a question to begin."),
                 };
                 var firstQuestion = await SendToGPTAsync(messages);
@@ -113,14 +122,7 @@ namespace Infrastructure.Services.Implements
             {
                 var messages = new List<ChatMessage>
                 {
-                    new SystemChatMessage($"""
-                        You are an English teacher helping a student practice conversation on the topic: {topic}.
-                    Please respond in natural, friendly, and encouraging paragraphs.
-                    Avoid using numbered lists, bullet points, or fragmented sentences.
-                    Politely correct any grammar or vocabulary errors within your response, helping the student learn without discouraging them.
-                    Use clear and simple language suitable for intermediate English learners.
-                    Keep the conversation focused on the topic, and provide questions or comments to guide the student.
-                    """),
+                    new SystemChatMessage($"Keep focus on {mainTopic}"),
                      new UserChatMessage(userInput),
                 };
                 UserChatMessage userMessage = new UserChatMessage(userInput);
@@ -139,6 +141,7 @@ namespace Infrastructure.Services.Implements
         public void EndConversation()
         {
             chatMessages.Clear();
+            mainTopic = String.Empty;
         }
 
         public async Task<String> ReplyUserAudio(IFormFile recored)
