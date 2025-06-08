@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Core
+namespace Core.Models
 {
     public class Idiom
     {
@@ -13,7 +13,7 @@ namespace Core
         public Idiom(string idiom, string Meaning)
         {
             this.idiom = idiom;
-            this.meaning = Meaning;
+            meaning = Meaning;
         }
     }
 }
