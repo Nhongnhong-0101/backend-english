@@ -112,5 +112,25 @@ namespace backend_english.Controllers
             }
         }
 
+        [HttpPost("send-forget-password-email")]
+        public async Task<IActionResult> SendForgetPassEmail([FromBody] string email)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(email))
+                {
+                    return BadRequest("Email is required.");
+                }
+
+                var code = await authService.SendForgetPassEmail(email);
+
+                return Ok(new ApiResponse<string>(200, "Đã gửi email xác thực", code));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error with service" + ex.Message);
+            }
+        }
+
     }
 }

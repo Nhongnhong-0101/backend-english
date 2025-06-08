@@ -166,5 +166,33 @@ namespace Infrastructure.Services.Implements
             var rand = new Random();
             return rand.Next(1000, 9999).ToString();
         }
+
+        public async Task<string> SendForgetPassEmail(string email)
+        {
+
+            try
+            {
+                string code = GenerateCode();
+                var template = await emailTemplateRepository.GetEmailTemplate("ForgetPassword");
+                if (!string.IsNullOrEmpty(template.BodyHtml) && !string.IsNullOrEmpty(template.Subject))
+                {
+                    string subject = template.Subject;
+                    string body = template.BodyHtml.Replace("{{CODE}}", code);
+                    MailData mailData = new MailData();
+                    mailData.EmailSubject = subject;
+                    mailData.EmailBody = body;
+                    mailData.EmailToName = email;
+                    await SendEmailAsync(mailData, email);
+
+                    return code;
+                }
+
+                return null;
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }
