@@ -33,7 +33,8 @@ namespace backend_english.Controllers
                 return BadRequest(new ApiResponse<string>(400, "Please check input", null));
             else
             {
-                return Ok(await valueService.sendToAzure(sententce: request.sentence, recored: request.audio));
+                //return Ok(await valueService.sendToAzure(sententce: request.sentence, recored: request.audio));
+                return Ok(valueService.FakeResponse());
             }
             
         }
