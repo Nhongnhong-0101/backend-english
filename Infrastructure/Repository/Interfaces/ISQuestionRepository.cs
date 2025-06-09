@@ -13,5 +13,7 @@ namespace Infrastructure.Repository.Interfaces
         Task<List<string>> GetAllTopicsAsync();
         Task<List<SpeakingQuestion>> GetByTopicAsync(string topic);
         Task<SpeakingQuestion?> GetByIdAsync(Guid questionId);
+        Task<SpeakingQuestion?> GetFirstQuestionInTopic( string topic );
+        Task<SpeakingQuestion?> GetNextQuestionByEmbeddingAsync(float[] userAnswerEmbedding, string topic);
     }
 }
