@@ -101,8 +101,8 @@ namespace Infrastructure.Repository.Implements
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
-                    string query = "SELECT * FROM speaking_question WHERE topic = @Topic ORDER BY question_id LIMIT 1";
-                    var result = await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(query, new { Topic = topic });
+                    string query = "SELECT * FROM speaking_question WHERE topic = @Topic AND content_type =@ContenType ORDER BY question_id LIMIT 1";
+                    var result = await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(query, new { Topic = topic, ContenType = "prompt" });
                     return result;
                 }
             }
@@ -120,16 +120,17 @@ namespace Infrastructure.Repository.Implements
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
-                    var embeddingString = "{" + string.Join(",", userAnswerEmbedding) + "}";
+                    var embeddingString = $"ARRAY[{string.Join(",", userAnswerEmbedding)}]::vector";
 
-                    string query = @"
-                    SELECT *, embedding <=> @UserEmbedding AS similarity
+                    string query = $@"
+                    SELECT *, embedding <=> {embeddingString} AS similarity
                     FROM speaking_question
                     WHERE topic = @Topic
+                    AND content_type =@ContentType
                     ORDER BY similarity
                     LIMIT 1;
                     ";
-                    var param = new { UserEmbedding = embeddingString, Topic = topic };
+                    var param = new { UserEmbedding = embeddingString, Topic = topic, ContentType = "prompt" };
                     var question = await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(query, param);
                     return question;
                 }

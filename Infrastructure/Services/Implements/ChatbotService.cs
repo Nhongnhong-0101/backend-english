@@ -25,13 +25,16 @@ namespace Infrastructure.Services.Implements
         private string direction = "You are an English tutor, help me learn to communicate effectively.";
         private string mainTopic = String.Empty;
         private static readonly HttpClient client = new HttpClient();
+        private readonly ISQuestionService questionService;
 
         private List<ChatMessage> chatMessages = new List<ChatMessage>();
+        private List<Guid> usedQuestion = new List<Guid>();
 
 
-        public ChatbotService(IConfiguration configuration)
+        public ChatbotService(IConfiguration configuration, ISQuestionService sQuestionService)
         {
              gptKey = configuration["GPT:Chatbot_key"];
+            questionService = sQuestionService;
         }
 
         public async Task<string> SendToGPTAsync(List<ChatMessage> chatHistory)
@@ -90,16 +93,35 @@ namespace Infrastructure.Services.Implements
             try
             {
                 mainTopic = topic.ToLower();
-                var messages = new List<ChatMessage>
+                var question = await questionService.GetFirstQuestionInTopic(mainTopic);
+                SystemChatMessage systemChatMessage;
+                if (question != null)
                 {
-                    new SystemChatMessage($"""
+                    systemChatMessage = new SystemChatMessage($"""
                         You are an English teacher helping a student practice conversation on the topic: {mainTopic}.
                     Please respond in natural, friendly, and encouraging paragraphs.
                     Avoid using numbered lists, bullet points, or fragmented sentences.
                     Politely correct any grammar or vocabulary errors within your response, helping the student learn without discouraging them.
                     Use clear and simple language suitable for intermediate English learners.
                     Keep the conversation focused on the topic, and provide questions or comments to guide the student.
-                    """),
+                    And please use this question {question.sentence} to guide the student.
+                    """);
+                }
+                else
+                {
+                    systemChatMessage = new SystemChatMessage($"""
+                        You are an English teacher helping a student practice conversation on the topic: {mainTopic}.
+                    Please respond in natural, friendly, and encouraging paragraphs.
+                    Avoid using numbered lists, bullet points, or fragmented sentences.
+                    Politely correct any grammar or vocabulary errors within your response, helping the student learn without discouraging them.
+                    Use clear and simple language suitable for intermediate English learners.
+                    Keep the conversation focused on the topic, and provide questions or comments to guide the student.
+                    """);
+                }
+
+                    var messages = new List<ChatMessage>
+                {
+                    systemChatMessage,
                      new UserChatMessage($"Let's start a conversation about {topic}. Give me a question to begin."),
                 };
                 var firstQuestion = await SendToGPTAsync(messages);
@@ -120,9 +142,20 @@ namespace Infrastructure.Services.Implements
         {
             try
             {
-                var messages = new List<ChatMessage>
+                var embedingInout = await questionService.GetEmbeddingAsync(userInput);
+                var nextQuestion = await questionService.GetNextQuestionByEmbeddingAsync(embedingInout, mainTopic, usedQuestion);
+                SystemChatMessage systemChatMessage;
+                if (nextQuestion != null)
                 {
-                    new SystemChatMessage($"Keep focus on {mainTopic}"),
+                    systemChatMessage = new SystemChatMessage($"Keep focus on {mainTopic} and use this question if it is reasonable {nextQuestion.sentence}");
+                }
+                else
+                {
+                    systemChatMessage = new SystemChatMessage($"Keep focus on {mainTopic}");
+                }
+                    var messages = new List<ChatMessage>
+                {
+                    systemChatMessage,
                      new UserChatMessage(userInput),
                 };
                 UserChatMessage userMessage = new UserChatMessage(userInput);
