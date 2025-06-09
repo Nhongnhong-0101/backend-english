@@ -93,5 +93,52 @@ namespace Infrastructure.Repository.Implements
                 throw;
             }
         }
+
+        public async Task<SpeakingQuestion?> GetFirstQuestionInTopic(string topic)
+        {
+            try
+            {
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+                    string query = "SELECT * FROM speaking_question WHERE topic = @Topic ORDER BY question_id LIMIT 1";
+                    var result = await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(query, new { Topic = topic });
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetFirstByTopicAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<SpeakingQuestion?> GetNextQuestionByEmbeddingAsync(float[] userAnswerEmbedding, string topic)
+        {
+            try
+            {
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+                    var embeddingString = "{" + string.Join(",", userAnswerEmbedding) + "}";
+
+                    string query = @"
+                    SELECT *, embedding <=> @UserEmbedding AS similarity
+                    FROM speaking_question
+                    WHERE topic = @Topic
+                    ORDER BY similarity
+                    LIMIT 1;
+                    ";
+                    var param = new { UserEmbedding = embeddingString, Topic = topic };
+                    var question = await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(query, param);
+                    return question;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetNextQuestionByEmbeddingAsync: {ex.Message}");
+                throw;
+            }
+        }
     }
 }
