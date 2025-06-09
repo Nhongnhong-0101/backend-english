@@ -16,5 +16,9 @@ namespace Infrastructure.Services.Interfaces
         public Task<List<SpeakingQuestion>> GetByTopicAsync(string topic);
         public Task<List<SpeakingQuestion>> GetPracticeQuestionsAsync(Guid accountId, string topic, int limit = 10);
 
+        public Task<SpeakingQuestion?> GetFirstQuestionInTopic (string topic);
+        public Task<SpeakingQuestion?> GetNextQuestionByEmbeddingAsync(float[] userEmbedding, string topic, List<Guid> excludeQuestionIds);
+        public Task<float[]> GetEmbeddingAsync(string text);
+
     }
 }

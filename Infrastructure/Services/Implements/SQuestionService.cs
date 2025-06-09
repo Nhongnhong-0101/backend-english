@@ -3,7 +3,10 @@ using Infrastructure.Repository.Implements;
 using Infrastructure.Repository.Interfaces;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.Services.Response;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
+using OpenAI;
+using OpenAI.Embeddings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,11 +19,13 @@ namespace Infrastructure.Services.Implements
     {
         private readonly ISQuestionRepository repository;
         private readonly IUSResultRepository  resultRepository;
+        private string gptKey;
 
-        public SQuestionService (ISQuestionRepository repository, IUSResultRepository resultRepository)
+        public SQuestionService (ISQuestionRepository repository, IUSResultRepository resultRepository, IConfiguration configuration)
         {
             this.repository = repository;
             this.resultRepository = resultRepository;
+            gptKey = configuration["GPT:Chatbot_key"];
         }
         public async Task<List<string>> GetAllTopicsAsync()
         {
@@ -41,6 +46,51 @@ namespace Infrastructure.Services.Implements
                 return await repository.GetByTopicAsync(topic);
             }
             catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<float[]> GetEmbeddingAsync(string text)
+        {
+            try
+            {
+                EmbeddingClient client = new(model: "text-embedding-3-small", apiKey: gptKey);
+                OpenAIEmbedding  embedding = await client.GenerateEmbeddingAsync(text);
+                ReadOnlyMemory<float> vector = embedding.ToFloats();
+                return vector.ToArray();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<SpeakingQuestion?> GetFirstQuestionInTopic(string topic)
+        {
+            try
+            {
+                var res = await repository.GetFirstQuestionInTopic(topic);
+                return res;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<SpeakingQuestion?> GetNextQuestionByEmbeddingAsync(float[] userEmbedding, string topic, List<Guid> excludeQuestionIds)
+        {
+            try
+            {
+                var question = await repository.GetNextQuestionByEmbeddingAsync(userEmbedding, topic);
+                if(question != null && !excludeQuestionIds.Contains(question.questionId) )
+                {
+                    return question;
+                }
+                return null;
+            }
+            catch
             {
                 throw;
             }
