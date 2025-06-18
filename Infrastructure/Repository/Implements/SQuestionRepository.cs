@@ -82,7 +82,7 @@ namespace Infrastructure.Repository.Implements
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
-                    string query = "SELECT * FROM speaking_question WHERE topic = @Topic";
+                    string query = "SELECT  FROM speaking_question WHERE topic = @Topic";
                     var result = await connect.QueryAsync<SpeakingQuestion>(query, new { Topic = topic });
                     return result.ToList();
                 }
@@ -138,6 +138,28 @@ namespace Infrastructure.Repository.Implements
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GetNextQuestionByEmbeddingAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task<List<SpeakingQuestion>> GetQuestionsAsync(string topic, string contentType, int num = 3)
+        {
+            try
+            {
+                List<SpeakingQuestion> sp = new List<SpeakingQuestion>();
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+                    string query = "SELECT question_id, sentence, level, topic, content_type FROM speaking_question " +
+                        "WHERE topic = @Topic AND content_type =@ContenType ORDER BY question_id " +
+                        "LIMIT @Num";
+                    var result = await connect.QueryAsync<SpeakingQuestion>(query, new { Topic = topic, ContenType = contentType, Num = num });
+                    return result.ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetFirstByTopicAsync: {ex.Message}");
                 throw;
             }
         }

@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Services.Implements
@@ -195,6 +196,71 @@ namespace Infrastructure.Services.Implements
         {
             if (string.IsNullOrEmpty(text)) return text;
             return text.Replace("\\n", " ").Replace("\"", "").Trim();
+        }
+
+        public async Task<List<KeywordsResponse>> GetKeywordsFromSentenceAsync(List<string> sentence)
+        {
+            try
+            {
+                string prompt = $@"
+                You are a helpful assistant that extracts important keywords from English sentences.
+                Given a list of sentences, return a JSON array. Each item must contain the original sentence and its extracted keywords (nouns, verbs, or important phrases). 
+                Output format:
+
+                [
+                  {{ ""sentence"": ""..."", ""keywords"": [""..."", ""...""] }},
+                  ...
+                ]
+
+                Here are the sentences:
+
+                {string.Join("\n", sentence.Select((s, i) => $"{i + 1}. {s}"))}
+
+                Only return valid JSON. Do not include any explanation or markdown.
+                ";
+
+                SystemChatMessage systemChatMessage;
+                systemChatMessage = new SystemChatMessage(prompt);
+                var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage("You are an English teacher assistant."),
+                    new UserChatMessage(prompt),
+                };
+                var response = await SendToGPTAsync(messages);
+                response = CleanJson(response);
+                var result = new List<KeywordsResponse>();
+
+                using var doc = JsonDocument.Parse(response);
+                foreach (var element in doc.RootElement.EnumerateArray())
+                {
+                    var sen = element.GetProperty("sentence").GetString();
+                    var keywords = element.GetProperty("keywords").EnumerateArray().Select(k => k.GetString()).ToList();
+
+                    KeywordsResponse key = new KeywordsResponse();
+                    key.keywords = keywords;
+                    key.sentence = sen;
+                    result.Add(key);
+                }
+
+                return result;
+
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        private string CleanJson(string content)
+        {
+
+            content = content.Trim('`', '\n', ' ');
+            if (content.StartsWith("```json"))
+            {
+                var match = Regex.Match(content, @"```json\s*(\[\s*{.+}\s*\])\s*```", RegexOptions.Singleline);
+                if (match.Success)
+                    return match.Groups[1].Value;
+            }
+            return content;
         }
     }
 }

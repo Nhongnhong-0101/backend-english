@@ -17,6 +17,7 @@ namespace Infrastructure.Services.Interfaces
         public Task<String> SendToGPTAsync(List<ChatMessage> chatHistory);
         public Task<String> TranscriptAudioAsync(IFormFile recored);
         public void EndConversation();
+        public Task<List<KeywordsResponse>> GetKeywordsFromSentenceAsync(List<string> sentence);
 
 
     }

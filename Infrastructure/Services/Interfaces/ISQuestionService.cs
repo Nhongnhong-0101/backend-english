@@ -20,5 +20,8 @@ namespace Infrastructure.Services.Interfaces
         public Task<SpeakingQuestion?> GetNextQuestionByEmbeddingAsync(float[] userEmbedding, string topic, List<Guid> excludeQuestionIds);
         public Task<float[]> GetEmbeddingAsync(string text);
 
+        public Task<List<ReoderQuestionResponse>> GetReoderQuestionsAsync(string topic, string contentType, int num);
+        public Task<List<SpeakingQuestion>> GetQuestionsAsync(string topic, string contentType, int num);
+
     }
 }

@@ -1,5 +1,6 @@
 ﻿using backend_english.Response;
 using Core.Models;
+using Infrastructure.Repository.Implements;
 using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.Services.Response;
@@ -14,10 +15,12 @@ namespace backend_english.Controllers
     {
         private readonly ISQuestionService questionService;
         private readonly IUSResultService resultService;
+        private readonly IChatbotService chatbotService;
 
-        public SQuestionController(ISQuestionService questionService)
+        public SQuestionController(ISQuestionService questionService, IChatbotService chatbotService)
         {
             this.questionService = questionService;
+            this.chatbotService = chatbotService;
         }
 
         [HttpGet("topics")]
@@ -57,6 +60,54 @@ namespace backend_english.Controllers
             return Ok(new { message = "Saved successfully" });
         }
 
+
+        [HttpGet("reoder-question")]
+        public async Task<IActionResult> GetReoderQuestions([FromQuery] string topic, [FromQuery] string contentType, int num)
+        {
+            if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
+            {
+                return BadRequest("Topic and ContentType are required.");
+            }
+
+            var questions = await questionService.GetReoderQuestionsAsync(topic, contentType, num);
+
+            if (questions == null || questions.Count == 0)
+            {
+                return NotFound("No questions found.");
+            }
+
+            return Ok(questions);
+        }
+
+        [HttpGet("keyword-question")]
+        public async Task<IActionResult> GetKeyWordQuestion([FromQuery] string topic, [FromQuery] string contentType, int num =3)
+        {
+            if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
+            {
+                return BadRequest("Topic and ContentType are required.");
+            }
+
+            List<SpeakingQuestion> ques = await questionService.GetQuestionsAsync(topic, contentType, num);
+
+            List<string> sententces = new List<string>();
+            foreach (var que in ques)
+            {
+                sententces.Add(que.sentence);
+            }
+
+            List<KeywordsResponse> keywords = new List<KeywordsResponse>();
+            if (sententces.Count > 0)
+            {
+                keywords = await chatbotService.GetKeywordsFromSentenceAsync(sententces);
+            }
+
+            if (keywords == null || keywords.Count == 0)
+            {
+                return NotFound("No questions found.");
+            }
+
+            return Ok(keywords);
+        }
         public class SaveSpeakingResultRequest
         {
             public List<UserSpeakingResult> Results { get; set; } = new();

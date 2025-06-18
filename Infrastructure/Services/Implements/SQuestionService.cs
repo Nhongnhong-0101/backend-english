@@ -66,6 +66,11 @@ namespace Infrastructure.Services.Implements
             }
         }
 
+        public Task<float[]> GetEmbeddingAsync(string text, string contentType)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<SpeakingQuestion?> GetFirstQuestionInTopic(string topic)
         {
             try
@@ -134,6 +139,49 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
+
+        public async Task<List<ReoderQuestionResponse>> GetReoderQuestionsAsync(string topic, string contentType, int num = 3)
+        {
+            try
+            {
+                List<ReoderQuestionResponse> responses = new List<ReoderQuestionResponse>();
+                var ques = await repository.GetQuestionsAsync(topic, contentType);
+                var random = new Random();
+
+                foreach (var q in ques)
+                {
+                    var words = q.sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+                    var shuffled = words.OrderBy(_ => random.Next()).ToList();
+
+                    ReoderQuestionResponse r = new ReoderQuestionResponse();
+
+                    r.questionId = q.questionId;
+                    r.topic = q.topic;
+                    r.correctSentence = q.sentence;
+                    r.shuffledWords = shuffled;
+
+                    responses.Add(r);
+                }
+                return responses;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<SpeakingQuestion>> GetQuestionsAsync(string topic, string contentType, int num = 3)
+        {
+            try
+            {
+                return await repository.GetQuestionsAsync(topic, contentType, num);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
 
         public async Task<Dictionary<string, TopicProgress>> GetUserTopicProgressAsync(Guid accountId)
         {
