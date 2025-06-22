@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Services.Response
 {
-    public class KeywordsResponse
+    public class KeywordsFbResponse
     {
-        public string sentence { get; set; }
-        public List<string> keywords { get; set; }
+        public string evaluation { get; set; }
+        public string suggestion { get; set; }
+        public string explanation { get; set; }
     }
 }

@@ -18,7 +18,7 @@ namespace Infrastructure.Services.Interfaces
         public Task<String> TranscriptAudioAsync(IFormFile recored);
         public void EndConversation();
         public Task<List<KeywordsResponse>> GetKeywordsFromSentenceAsync(List<string> sentence);
-
+        public Task<KeywordsFbResponse> GetKeywordsFeedbackAsync(List<string> keywords, string userSentence);
 
     }
 }

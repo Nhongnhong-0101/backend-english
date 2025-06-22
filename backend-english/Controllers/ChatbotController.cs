@@ -1,5 +1,7 @@
-﻿using backend_english.Response;
+﻿using backend_english.Request;
+using backend_english.Response;
 using Infrastructure.Services.Interfaces;
+using Infrastructure.Services.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -89,6 +91,23 @@ namespace backend_english.Controllers
             }
         }
 
-       
+        [HttpPost("keywords-feedback")]
+        public async Task<IActionResult> GetKeywordsFeedback([FromBody] KeywordsFbRequest request)
+        {
+            try
+            {
+                if (request.keywords == null || request.keywords.Count == 0 || string.IsNullOrWhiteSpace(request.userSentence))
+                {
+                    return BadRequest("Keywords and sentence must not be empty.");
+                }
+                var response = await chatbotService.GetKeywordsFeedbackAsync(request.keywords, request.userSentence);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetKeywordsFeedback: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing the feedback.");
+            }
+        }
     }
 }

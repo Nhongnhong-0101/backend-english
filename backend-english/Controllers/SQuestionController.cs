@@ -61,52 +61,151 @@ namespace backend_english.Controllers
         }
 
 
-        [HttpGet("reoder-question")]
-        public async Task<IActionResult> GetReoderQuestions([FromQuery] string topic, [FromQuery] string contentType, int num)
-        {
-            if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
-            {
-                return BadRequest("Topic and ContentType are required.");
-            }
-
-            var questions = await questionService.GetReoderQuestionsAsync(topic, contentType, num);
-
-            if (questions == null || questions.Count == 0)
-            {
-                return NotFound("No questions found.");
-            }
-
-            return Ok(questions);
-        }
-
         [HttpGet("keyword-question")]
-        public async Task<IActionResult> GetKeyWordQuestion([FromQuery] string topic, [FromQuery] string contentType, int num =3)
+        public async Task<IActionResult> GetKeyWordQuestion([FromQuery] string topic, [FromQuery] string contentType = "sentence", int num =3)
         {
             if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
             {
                 return BadRequest("Topic and ContentType are required.");
             }
 
-            List<SpeakingQuestion> ques = await questionService.GetQuestionsAsync(topic, contentType, num);
+            //List<SpeakingQuestion> ques = await questionService.GetQuestionsAsync(topic, contentType, num);
 
-            List<string> sententces = new List<string>();
-            foreach (var que in ques)
+            //List<string> sententces = new List<string>();
+            //foreach (var que in ques)
+            //{
+            //    sententces.Add(que.sentence);
+            //}
+
+            //List<KeywordsResponse> keywords = new List<KeywordsResponse>();
+            //if (sententces.Count > 0)
+            //{
+            //    keywords = await chatbotService.GetKeywordsFromSentenceAsync(sententces);
+            //}
+
+            //if (keywords == null || keywords.Count == 0)
+            //{
+            //    return NotFound("No questions found.");
+            //}
+
+            var fakeData = new List<QuestionResponse>
             {
-                sententces.Add(que.sentence);
-            }
+                new QuestionResponse
+                {
+                    type = "reoder",
+                    instructions = "Arrange the words in correct order.",
+                    data = new KeywordsResponse
+                    {
+                        sentence = "I am currently a student.",
+                        keywords = new List<string> { "currently", "student", "I" }
+                    },
 
-            List<KeywordsResponse> keywords = new List<KeywordsResponse>();
-            if (sententces.Count > 0)
+                },
+                 new QuestionResponse
+                {
+                    type = "reoder",
+                    instructions = "Arrange the words in correct order.",
+                    data = new KeywordsResponse
+                    {
+                        sentence = "He is playing football.",
+                        keywords = new List<string> { "he", "football", "playing" }
+                    },
+
+                },
+                  new QuestionResponse
+                {
+                    type = "reoder",
+                    instructions = "Arrange the words in correct order.",
+                    data = new KeywordsResponse
+                    {
+                        sentence = "She likes reading books at night.",
+                        keywords = new List<string> { "reading", "books", "she", "night" }
+                    },
+
+                },
+              
+            };
+            //return Ok(keywords);
+            return Ok(new ApiResponse<List<QuestionResponse>>(200, null, fakeData));
+        }
+   
+        [HttpGet("random-question")]
+        public async Task<IActionResult> GetQuestions([FromQuery] string topic, [FromQuery] string contentType = "dialogue", int num = 3)
+        {
+            //if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
+            //{
+            //    return BadRequest("Topic and ContentType are required.");
+            //}
+            //if(contentType == "keyword")
+            //{
+            //    return await GetKeyWordQuestion(topic, "sentence", num);
+            //}
+            //else
+            //{
+            //    var ques = await questionService.GetQuestionsAsync(topic, contentType, num);
+            //    return Ok(new ApiResponse<List<QuestionResponse>>(200, null, ques));
+            //}
+
+            var fakeData = new List<QuestionResponse>
             {
-                keywords = await chatbotService.GetKeywordsFromSentenceAsync(sententces);
-            }
+                new QuestionResponse
+                {
+                    type = "keyword",
+                    instructions = "Arrange the words in correct order.",
+                    data = new KeywordsResponse
+                    {
+                        sentence = "I am currently a student.",
+                        keywords = new List<string> { "currently", "student", "I" }
+                    },
 
-            if (keywords == null || keywords.Count == 0)
-            {
-                return NotFound("No questions found.");
-            }
+                },
+                 new QuestionResponse
+                {
+                    type = "sentence",
+                    instructions = "Speak clerly.",
+                    data = new 
+                    {
+                        sentence = "He is playing football.",
+                    },
 
-            return Ok(keywords);
+                },
+                  new QuestionResponse
+                {
+                    type = "word",
+                    instructions = "speak clearly",
+                    data = new 
+                    {
+                        sentence = "night",
+                    },
+
+                },
+                  new QuestionResponse
+                {
+                    type = "reoder",
+                    instructions = "Arrange these words to make a right sentence",
+                    data = new ReoderQuestionResponse
+                    {
+                        sentence = "I am currently a student.",
+                        shuffledWords = ["I", "currently", "student", "am", "a"]
+                    },
+
+                },
+                  new QuestionResponse
+                {
+                    type = "prompt",
+                    instructions = "Let talk about this topic",
+                    data = new 
+                    {
+                        sentence = "Let's talk about yourself",
+                    },
+
+                },
+
+            };
+            //return Ok(keywords);
+            return Ok(new ApiResponse<List<QuestionResponse>>(200, null, fakeData));
+
+
         }
         public class SaveSpeakingResultRequest
         {

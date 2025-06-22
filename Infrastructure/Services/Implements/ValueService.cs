@@ -53,11 +53,14 @@ namespace Infrastructure.Services.Implements
         {
             try
             {
-                filePath = Path.GetTempFileName();
-                using (var stream = System.IO.File.Create(filePath))
+                var tempFile = Path.GetTempFileName();
+                using (var stream = System.IO.File.Create(tempFile))
                 {
                     await audio.CopyToAsync(stream);
                 }
+                string wavFile = Path.ChangeExtension(tempFile, ".wav");
+                File.Move(tempFile, wavFile); 
+                filePath = wavFile;
                 if (!string.IsNullOrEmpty(apiKey) && !string.IsNullOrEmpty(region))
                 {
                     SpeechConfig speechConfig = SpeechConfig.FromSubscription(apiKey, region);
@@ -73,41 +76,42 @@ namespace Infrastructure.Services.Implements
                     {
                         pronunciationConfig.ApplyTo(recognizer);
                         var speechRecognitionResult = await recognizer.RecognizeOnceAsync();
-                        var pronunciationAssessmentResult = PronunciationAssessmentResult.FromResult(speechRecognitionResult);
-                        var pronunciationAssessmentResultJson = speechRecognitionResult.Properties.GetProperty(PropertyId.SpeechServiceResponse_JsonResult);
+                            var pronunciationAssessmentResultJson = speechRecognitionResult.Properties.GetProperty(PropertyId.SpeechServiceResponse_JsonResult);
 
-                        var result = JsonConvert.DeserializeObject<PronounciationResponse>(pronunciationAssessmentResultJson);
-                        var nBest = result.NBest.First();
-                        var assessment = nBest.PronunciationAssessment;
+                            var result = JsonConvert.DeserializeObject<PronounciationResponse>(pronunciationAssessmentResultJson);
+                            var nBest = result.NBest.First();
+                            var assessment = nBest.PronunciationAssessment;
 
-                        var wordResults = new List<WordResult>();
-                        foreach (var w in nBest.Words)
-                        {
-                            var wr = new WordResult();
-                            wr.Word = w.WordText;
-                            wr.Score = w.PronunciationAssessment.AccuracyScore;
-                            wr.ErrorType = w.PronunciationAssessment.ErrorType;
-                            wordResults.Add(wr);
+                            var wordResults = new List<WordResult>();
+                            foreach (var w in nBest.Words)
+                            {
+                                var wr = new WordResult();
+                                wr.Word = w.WordText;
+                                wr.Score = w.PronunciationAssessment.AccuracyScore;
+                                wr.ErrorType = w.PronunciationAssessment.ErrorType;
+                                wordResults.Add(wr);
+                            }
+
+                            var response = new AssessmentResponse();
+                            response.DisplayText = sentence;
+                            response.OverallAccuracy = assessment.AccuracyScore;
+                            response.Fluency = assessment.FluencyScore;
+                            response.Prosody = assessment.ProsodyScore;
+                            response.Completeness = assessment.CompletenessScore;
+                            response.PronScore = assessment.PronScore;
+                            response.Words = wordResults;
+                            ;
+
+                            return response;
                         }
-
-                        var response = new AssessmentResponse();
-                        response.DisplayText = sentence;
-                        response.OverallAccuracy = assessment.AccuracyScore;
-                        response.Fluency = assessment.FluencyScore;
-                        response.Prosody = assessment.ProsodyScore;
-                        response.Completeness = assessment.CompletenessScore;
-                        response.PronScore = assessment.PronScore;
-                        response.Words = wordResults;
-                        ;
-
-                        return response;
                     }
-                }
+                
                 return null;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"sendToAzure error: {ex.Message}");
+
                 return null;
             }
             finally

@@ -1,4 +1,5 @@
-﻿using Core.Models;
+﻿using Azure;
+using Core.Models;
 using Infrastructure.Repository.Implements;
 using Infrastructure.Repository.Interfaces;
 using Infrastructure.Services.Interfaces;
@@ -7,9 +8,11 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using OpenAI;
 using OpenAI.Embeddings;
+using Org.BouncyCastle.Tls.Crypto.Impl.BC;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -146,21 +149,10 @@ namespace Infrastructure.Services.Implements
             {
                 List<ReoderQuestionResponse> responses = new List<ReoderQuestionResponse>();
                 var ques = await repository.GetQuestionsAsync(topic, contentType);
-                var random = new Random();
-
-                foreach (var q in ques)
+                foreach( var que in ques)
                 {
-                    var words = q.sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
-                    var shuffled = words.OrderBy(_ => random.Next()).ToList();
-
-                    ReoderQuestionResponse r = new ReoderQuestionResponse();
-
-                    r.questionId = q.questionId;
-                    r.topic = q.topic;
-                    r.correctSentence = q.sentence;
-                    r.shuffledWords = shuffled;
-
-                    responses.Add(r);
+                    var q = parseToReorder(que);
+                    responses.Add(q);
                 }
                 return responses;
             }
@@ -170,11 +162,71 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public async Task<List<SpeakingQuestion>> GetQuestionsAsync(string topic, string contentType, int num = 3)
+        public async Task<List<QuestionResponse>> GetQuestionsAsync(string topic, string contentType, int num = 3)
         {
             try
             {
-                return await repository.GetQuestionsAsync(topic, contentType, num);
+                List<QuestionResponse> responses = new List<QuestionResponse>();
+                List<SpeakingQuestion> questions = await repository.GetQuestionsAsync(topic, contentType, num);
+                if (!String.IsNullOrEmpty(contentType.Trim()))
+                {
+                    foreach (var question in questions)
+                    {
+                        switch (question.contentType)
+                        {
+                            case "sentence":
+                            case "word":
+                                QuestionResponse response = new QuestionResponse();
+                                response.questionId = question.questionId;
+                                response.instructions = "Repeat this word/sentence clearly";
+                                response.type = "sentence";
+                                response.data = new Dictionary<string, string>
+                                {
+                                    { "sentence", question.sentence }
+                                };
+                                responses.Add(response);
+                                break;
+
+                            case "dialogue":
+                                QuestionResponse r = new QuestionResponse();
+                                r.questionId = question.questionId;
+                                r.instructions = "Repeat this sentence";
+                                r.type = "dialogue";
+                                r.data = parseToDialogue(question);
+                                responses.Add(r);
+
+                                break;
+
+                            case "reorder":
+                                QuestionResponse q = new QuestionResponse();
+                                q.questionId = question.questionId;
+                                q.instructions = "Repeat this sentence";
+                                q.type = "reorder";
+                                q.data = parseToReorder(question);
+                                responses.Add(q);
+
+                                break;
+
+                            case "prompt":
+                                QuestionResponse p = new QuestionResponse();
+                                p.questionId = question.questionId;
+                                p.instructions = "Let talk about this topic";
+                                p.type = "prompt";
+                                p.data = new Dictionary<string, string>
+                                {
+                                    { "sentence", question.sentence }
+                                };
+                                responses.Add(p);
+
+                                break;
+
+                            default:
+                                break; 
+                        }
+                    }
+
+                }
+                return responses;
             }
             catch
             {
@@ -194,6 +246,61 @@ namespace Infrastructure.Services.Implements
             {
                 throw;
             }
+        }
+
+        public Task<List<SpeakingQuestion>> GetSentenceQuestionAsync(string topic, string contentType, int num)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<DialogueQuestionResponse>> GetDialogQuestionAsync(string topic, string contentType = "dialogue", int num =3)
+        {
+            try
+            {
+                List<DialogueQuestionResponse> responses = new List<DialogueQuestionResponse>();
+                var ques = await repository.GetQuestionsAsync(topic, contentType);
+
+                foreach (var q in ques)
+                {
+                    var dialogue = parseToDialogue(q);
+                    responses.Add(dialogue);
+                }
+                return responses;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        public DialogueQuestionResponse parseToDialogue(SpeakingQuestion q)
+        {
+            var segments = q.sentence.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            var dialogue = new DialogueQuestionResponse();
+
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var line = new DialogueLine
+                {
+                    speaker = i % 2 == 0 ? "A" : "B",
+                    sentence = segments[i].Trim()
+                };
+
+                dialogue.lines.Add(line);
+            }
+            return dialogue;
+        }
+        public ReoderQuestionResponse parseToReorder(SpeakingQuestion q) {
+            var random = new Random();
+
+            var words = q.sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var shuffled = words.OrderBy(_ => random.Next()).ToList();
+
+            ReoderQuestionResponse r = new ReoderQuestionResponse();
+            r.sentence = q.sentence;
+            r.shuffledWords = shuffled;
+
+            return r;
         }
     }
 }

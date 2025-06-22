@@ -192,11 +192,6 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
-        private string CleanText(string text)
-        {
-            if (string.IsNullOrEmpty(text)) return text;
-            return text.Replace("\\n", " ").Replace("\"", "").Trim();
-        }
 
         public async Task<List<KeywordsResponse>> GetKeywordsFromSentenceAsync(List<string> sentence)
         {
@@ -250,6 +245,64 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
+        public async Task<KeywordsFbResponse> GetKeywordsFeedbackAsync(List<string> keywords, string userSentence)
+        {
+            try
+            {
+                var prompt = $@"
+                    You are an English teacher.
+
+                    The student was given these keywords: {JsonSerializer.Serialize(keywords)}
+
+                    The student wrote this sentence: ""{userSentence}""
+
+                    Your tasks:
+                    1. Evaluate the sentence: is it grammatically correct and natural?
+                    2. Suggest a better version using the given keywords (if possible).
+                    3. Explain your suggestion.
+
+                    Respond in this JSON format:
+                    {{
+                      ""evaluation"": """",
+                      ""suggestion"": """",
+                      ""explanation"": """"
+                    }}
+                    ";
+                SystemChatMessage systemChatMessage;
+                systemChatMessage = new SystemChatMessage(prompt);
+                var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage("You are an English teacher assistant."),
+                    new UserChatMessage(prompt),
+                };
+                var response = await SendToGPTAsync(messages);
+                response = CleanJson(response);
+
+                using var doc = JsonDocument.Parse(response);
+                KeywordsFbResponse fb = new KeywordsFbResponse();
+                foreach (var element in doc.RootElement.EnumerateArray())
+                {
+                    var evaluation = element.GetProperty("evaluation").GetString();
+                    var suggestion = element.GetProperty("suggestion").GetString();
+                    var explanation = element.GetProperty("explanation").GetString();
+
+                    fb.evaluation = evaluation;
+                    fb.suggestion = suggestion;
+                    fb.explanation = explanation;
+                }
+
+                return fb;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        private string CleanText(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            return text.Replace("\\n", " ").Replace("\"", "").Trim();
+        }
         private string CleanJson(string content)
         {
 
@@ -262,5 +315,6 @@ namespace Infrastructure.Services.Implements
             }
             return content;
         }
+
     }
 }
