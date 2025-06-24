@@ -277,19 +277,16 @@ namespace Infrastructure.Services.Implements
                 };
                 var response = await SendToGPTAsync(messages);
                 response = CleanJson(response);
-
                 using var doc = JsonDocument.Parse(response);
-                KeywordsFbResponse fb = new KeywordsFbResponse();
-                foreach (var element in doc.RootElement.EnumerateArray())
-                {
-                    var evaluation = element.GetProperty("evaluation").GetString();
-                    var suggestion = element.GetProperty("suggestion").GetString();
-                    var explanation = element.GetProperty("explanation").GetString();
+                var root = doc.RootElement;
+                var evaluation = root.GetProperty("evaluation").GetString();
+                var suggestion = root.GetProperty("suggestion").GetString();
+                var explanation = root.GetProperty("explanation").GetString();
 
-                    fb.evaluation = evaluation;
-                    fb.suggestion = suggestion;
-                    fb.explanation = explanation;
-                }
+                KeywordsFbResponse fb = new KeywordsFbResponse();
+                fb.evaluation = evaluation;
+                fb.suggestion = suggestion;
+                fb.explanation = explanation;
 
                 return fb;
             }

@@ -101,7 +101,7 @@ namespace backend_english.Controllers
                     return BadRequest("Keywords and sentence must not be empty.");
                 }
                 var response = await chatbotService.GetKeywordsFeedbackAsync(request.keywords, request.userSentence);
-                return Ok(response);
+                return Ok(new ApiResponse<KeywordsFbResponse>(200, null, response));
             }
             catch (Exception ex)
             {
