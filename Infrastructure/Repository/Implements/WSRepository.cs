@@ -153,7 +153,7 @@ namespace Infrastructure.Repository.Implements
                         cmd.Parameters.AddWithValue($"@id", id);
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            if (await reader.ReadAsync())
+                            while (await reader.ReadAsync())
                             {
                                 Vocab v = new Vocab();
                                 v.vocab = reader.GetString(1);
