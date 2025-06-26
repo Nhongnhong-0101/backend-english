@@ -65,7 +65,7 @@ namespace Infrastructure.Repository.Implements
                 INSERT INTO ws_m2m_vocab (wordset_id, vocab, primarymeaning_vi, primarymeaning_en, is_star)
                 VALUES (@wordset_id, @vocab, @primarymeaning_vi, @primarymeaning_en, @is_star);";
 
-                using (var connect = new NpgsqlConnection(command))
+                using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
 
