@@ -79,12 +79,30 @@ namespace Infrastructure.Repository.Implements
         {
             try
             {
+                List<SpeakingQuestion> questions = new List<SpeakingQuestion>();
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
-                    string query = "SELECT  FROM speaking_question WHERE topic = @Topic";
-                    var result = await connect.QueryAsync<SpeakingQuestion>(query, new { Topic = topic });
-                    return result.ToList();
+                    string query = "SELECT question_id, sentence, level, topic, content_type FROM speaking_question WHERE topic = @Topic";
+                    using var cmd = new NpgsqlCommand(query, connect);
+                    cmd.Parameters.AddWithValue("@topic", topic);
+
+                    using var reader = await cmd.ExecuteReaderAsync();
+
+                    while (await reader.ReadAsync())
+                    {
+                        var question = new SpeakingQuestion
+                        {
+                            questionId = reader.GetGuid(0),
+                            sentence = reader.GetString(1),
+                            level = reader.IsDBNull(2) ? null : reader.GetString(2),
+                            topic = reader.IsDBNull(3) ? null : reader.GetString(3),
+                            contentType = reader.IsDBNull(4) ? null : reader.GetString(4),
+                        };
+
+                        questions.Add(question);
+                    }
+                    return questions;
                 }
             }
             catch (Exception ex)
