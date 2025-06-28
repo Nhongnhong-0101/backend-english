@@ -34,7 +34,8 @@ namespace Infrastructure.Services.Implements
                 {
                     throw new ArgumentException("There is an existed account with this email");
                 }
-
+                string hashedPassword = BCrypt.Net.BCrypt.HashPassword(newAccount.passwordHash);
+                newAccount.passwordHash = hashedPassword;
                 return await accountRepository.AddNewAccountAsync(newAccount);
 
             }
@@ -93,6 +94,8 @@ namespace Infrastructure.Services.Implements
                 }
                 else
                 {
+                    string hashedPassword = BCrypt.Net.BCrypt.HashPassword(updatedAccount.passwordHash);
+                    updatedAccount.passwordHash = hashedPassword;
                     return await accountRepository.UpdateAccountAsync(updatedAccount);  
                 }
             }
