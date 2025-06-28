@@ -12,6 +12,6 @@ namespace Infrastructure.Services.Interfaces
         public Task<IEnumerable<Lesson>> GetLessonsOfAccount(Guid accountId, Guid planId);
         public Task<bool> UpdateAccountPassLesson(Guid accountId, Guid lessonId);
 
-        public Task<IEnumerable<SpeakingQuestion>> GetQuestionsOfLesson(Guid idLesson);
+        public Task<IEnumerable<SpeakingQuestion>> GetQuestionsOfLesson(Guid idLesson, int limit);
     }
 }

@@ -132,78 +132,78 @@ namespace backend_english.Controllers
         [HttpGet("random-question")]
         public async Task<IActionResult> GetQuestions([FromQuery] string topic, [FromQuery] string contentType = "dialogue", int num = 3)
         {
-            //if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
-            //{
-            //    return BadRequest("Topic and ContentType are required.");
-            //}
-            //if(contentType == "keyword")
-            //{
-            //    return await GetKeyWordQuestion(topic, "sentence", num);
-            //}
-            //else
-            //{
-            //    var ques = await questionService.GetQuestionsAsync(topic, contentType, num);
-            //    return Ok(new ApiResponse<List<QuestionResponse>>(200, null, ques));
-            //}
-
-            var fakeData = new List<QuestionResponse>
+            if (string.IsNullOrWhiteSpace(topic) || string.IsNullOrWhiteSpace(contentType))
             {
-                new QuestionResponse
-                {
-                    type = "keyword",
-                    instructions = "Arrange the words in correct order.",
-                    data = new KeywordsResponse
-                    {
-                        sentence = "I am currently a student.",
-                        keywords = new List<string> { "currently", "student", "I" }
-                    },
+                return BadRequest("Topic and ContentType are required.");
+            }
+            if (contentType == "keyword")
+            {
+                return await GetKeyWordQuestion(topic, "sentence", num);
+            }
+            else
+            {
+                var ques = await questionService.GetQuestionsAsync(topic, contentType, num);
+                return Ok(new ApiResponse<List<QuestionResponse>>(200, null, ques));
+            }
 
-                },
-                 new QuestionResponse
-                {
-                    type = "sentence",
-                    instructions = "Speak clerly.",
-                    data = new 
-                    {
-                        sentence = "He is playing football.",
-                    },
+            //var fakeData = new List<QuestionResponse>
+            //{
+            //    new QuestionResponse
+            //    {
+            //        type = "keyword",
+            //        instructions = "Arrange the words in correct order.",
+            //        data = new KeywordsResponse
+            //        {
+            //            sentence = "I am currently a student.",
+            //            keywords = new List<string> { "currently", "student", "I" }
+            //        },
 
-                },
-                  new QuestionResponse
-                {
-                    type = "word",
-                    instructions = "speak clearly",
-                    data = new 
-                    {
-                        sentence = "night",
-                    },
+            //    },
+            //     new QuestionResponse
+            //    {
+            //        type = "sentence",
+            //        instructions = "Speak clerly.",
+            //        data = new 
+            //        {
+            //            sentence = "He is playing football.",
+            //        },
 
-                },
-                  new QuestionResponse
-                {
-                    type = "reoder",
-                    instructions = "Arrange these words to make a right sentence",
-                    data = new ReoderQuestionResponse
-                    {
-                        sentence = "I am currently a student.",
-                        shuffledWords = ["I", "currently", "student", "am", "a"]
-                    },
+            //    },
+            //      new QuestionResponse
+            //    {
+            //        type = "word",
+            //        instructions = "speak clearly",
+            //        data = new 
+            //        {
+            //            sentence = "night",
+            //        },
 
-                },
-                  new QuestionResponse
-                {
-                    type = "prompt",
-                    instructions = "Let talk about this topic",
-                    data = new 
-                    {
-                        sentence = "Let's talk about yourself",
-                    },
+            //    },
+            //      new QuestionResponse
+            //    {
+            //        type = "reoder",
+            //        instructions = "Arrange these words to make a right sentence",
+            //        data = new ReoderQuestionResponse
+            //        {
+            //            sentence = "I am currently a student.",
+            //            shuffledWords = ["I", "currently", "student", "am", "a"]
+            //        },
 
-                },
+            //    },
+            //      new QuestionResponse
+            //    {
+            //        type = "prompt",
+            //        instructions = "Let talk about this topic",
+            //        data = new 
+            //        {
+            //            sentence = "Let's talk about yourself",
+            //        },
 
-            };
+            //    },
+
+            //};
             //return Ok(keywords);
-            return Ok(new ApiResponse<List<QuestionResponse>>(200, null, fakeData));
+            //return Ok(new ApiResponse<List<QuestionResponse>>(200, null, fakeData));
 
 
         }

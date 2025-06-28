@@ -43,7 +43,7 @@ namespace Infrastructure.Services.Implements
             }
         }
 
-        public async Task<IEnumerable<SpeakingQuestion>> GetQuestionsOfLesson(Guid idLesson)
+        public async Task<IEnumerable<SpeakingQuestion>> GetQuestionsOfLesson(Guid idLesson, int limit)
         {
             List<SpeakingQuestion> questionList = new List<SpeakingQuestion>();
             try
@@ -91,6 +91,20 @@ namespace Infrastructure.Services.Implements
                             }
                         }
                     }
+                }
+                if(questionList.Count > limit)
+                {
+                    var random = new Random();
+                    var shuffled = questionList.OrderBy(_ => random.Next()).ToList();
+
+                    var selected = shuffled.Take(limit).ToList();
+
+                    var sorted = selected.OrderBy(q =>
+                        q.level.ToLower() == "easy" ? 0 :
+                        q.level.ToLower() == "medium" ? 1 : 2
+                    ).ToList();
+
+                    return sorted;
                 }
                 return questionList;
             }

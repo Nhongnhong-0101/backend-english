@@ -41,11 +41,11 @@ namespace backend_english.Controllers
         }
 
         [HttpGet("{lessonId}/speaking-questions")]
-        public async Task<IActionResult> GetSpeakingQuestionsForLesson(Guid lessonId)
+        public async Task<IActionResult> GetSpeakingQuestionsForLesson(Guid lessonId, int limit= 10)
         {
             try
             {
-                var questions = await lessonService.GetQuestionsOfLesson(lessonId);
+                var questions = await lessonService.GetQuestionsOfLesson(lessonId, limit);
                 return Ok(new
                 {
                     StatusCode = 200,
