@@ -30,7 +30,7 @@ namespace Infrastructure.Services.Implements
             return await wSRepository.AddNewWordSetAsync(wordSet);
         }
 
-        public async Task<bool> AddVocabsToWSAsync(List<Vocab> vocabs, Guid wsId)
+        public async Task<bool> AddVocabsToWSAsync(List<VocabWS> vocabs, Guid wsId)
         {
             if (wsId == Guid.Empty)
             {
@@ -49,7 +49,17 @@ namespace Infrastructure.Services.Implements
             await wSRepository.DeleteWordSetByIdAsync(id);
         }
 
-        public async Task<IEnumerable<Vocab>> GetVocabsOfWSAsync(Guid id)
+        public async Task<IEnumerable<VocabWS>> GetSavedWordsOfAccount(Guid accountId)
+        {
+            if (accountId == Guid.Empty)
+            {
+                throw new ArgumentException("account ID cannot be empty");
+            }
+
+            return await wSRepository.GetSavedWordsWSAsync(accountId);
+        }
+
+        public async Task<IEnumerable<VocabWS>> GetVocabsOfWSAsync(Guid id)
         {
             if (id == Guid.Empty)
             {
@@ -77,6 +87,25 @@ namespace Infrastructure.Services.Implements
             }
 
             return await wSRepository.GetWordSetsOfAccountAsync(accountId);
+        }
+
+        public async Task<bool> SaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId)
+        {
+            if (accountId == Guid.Empty)
+            {
+                throw new ArgumentException("account ID cannot be empty");
+            }
+
+            return await wSRepository.SaveVocabsToSavedWSAsync(vocabs, accountId);
+        }
+
+        public async Task<bool> UpdateVocabsToWSAsync(List<VocabWS> vocabs, Guid wsId)
+        {
+            if (wsId == Guid.Empty)
+            {
+                throw new ArgumentException("WordSet ID cannot be empty");
+            }
+            return await wSRepository.UpdaVocabsToWteSAsync(vocabs, wsId);
         }
 
         public async Task<WordSet?> UpdateWordSetAsync(WordSet wordSet)

@@ -12,9 +12,14 @@ namespace Infrastructure.Services.Interfaces
         Task<WordSet?> GetWordSetByIdAsync(Guid id);
         Task<WordSet?> AddNewWordSetAsync(WordSet wordSet);
         Task<WordSet?> UpdateWordSetAsync(WordSet wordSet);
-        Task<IEnumerable<Vocab>> GetVocabsOfWSAsync(Guid id);
-        Task<bool> AddVocabsToWSAsync(List<Vocab> vocabs, Guid wsId);
+        Task<IEnumerable<VocabWS>> GetVocabsOfWSAsync(Guid id);
+        Task<bool> AddVocabsToWSAsync(List<VocabWS> vocabs, Guid wsId);
+        Task<bool> UpdateVocabsToWSAsync(List<VocabWS> vocabs, Guid wsId);
         Task<IEnumerable<WordSet>> GetWordSetsOfAccountAsync(Guid accountId);
         Task DeleteWordSetByIdAsync(Guid id);
+
+        Task<bool> SaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId);
+
+        Task<IEnumerable<VocabWS>>GetSavedWordsOfAccount(Guid accountId);
     }
 }

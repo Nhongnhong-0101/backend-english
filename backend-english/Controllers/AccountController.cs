@@ -1,5 +1,6 @@
 ﻿using backend_english.Response;
 using Core.Models;
+using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,9 +11,11 @@ namespace backend_english.Controllers
     public class AccountController : ControllerBase
     {
         private readonly IAccountService accountService;
-        public AccountController(IAccountService accountService)
+        private readonly IWSService wSService;
+        public AccountController(IAccountService accountService, IWSService wSService)
         {
             this.accountService = accountService;
+            this.wSService = wSService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAllAccount()
@@ -69,7 +72,21 @@ namespace backend_english.Controllers
             try
             {
                 var success = await accountService.AddNewAccountAsync(newAcc);
-                if (success != null) {
+                if (success != null)
+                {
+                    var defaultWordSet = new WordSet
+                    {
+                        wordsetId = Guid.NewGuid(),
+                        nameSet = "Saved Words",
+                        accountId = success.accountId
+                    };
+                    var wordSetSuccess = await wSService.AddNewWordSetAsync(defaultWordSet);
+
+                    if (wordSetSuccess == null || wordSetSuccess.wordsetId == Guid.Empty)
+                    {
+                        Console.WriteLine("Failed to create default 'Saved Words' word set.");
+                    }
+
                     return Ok(new ApiResponse<Account>(200, "Success", success));
                 }
                 else

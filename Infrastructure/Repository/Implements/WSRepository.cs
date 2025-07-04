@@ -1,5 +1,7 @@
 ﻿using Core.Models;
 using Infrastructure.Repository.Interfaces;
+using Infrastructure.Services.Implements;
+using Infrastructure.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -59,7 +61,7 @@ namespace Infrastructure.Repository.Implements
             }
         }
 
-        public async Task<bool> AddVocabsToWSAsync(List<Vocab> vocabs, Guid wsId)
+        public async Task<bool> AddVocabsToWSAsync(List<VocabWS> vocabs, Guid wsId)
         {
                 string command = @"
                 INSERT INTO ws_m2m_vocab (wordset_id, vocab, primarymeaning_vi, primarymeaning_en, is_star)
@@ -135,16 +137,78 @@ namespace Infrastructure.Repository.Implements
                 }
             }
         }
-        
-            
 
-        public async Task<IEnumerable<Vocab>> GetVocabsOfWSAsync(Guid id)
+        public async Task<IEnumerable<VocabWS>> GetSavedWordsWSAsync(Guid accountId)
+        {
+            try
+            {
+
+                string query = @"
+                    SELECT wordset_id
+                    FROM word_set 
+                    WHERE account_id = @accountId AND name_set = 'Saved Words'";
+                Guid? wsId = null;
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+
+                    using (var cmd = new NpgsqlCommand(query, connect))
+                    {
+                        cmd.Parameters.AddWithValue("@accountId", accountId);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                wsId = reader.GetGuid(reader.GetOrdinal("wordset_id"));
+                            }
+                        }
+                    }
+                }
+                if (wsId.HasValue)
+                {
+                    string query2 = "SELECT wordset_id, vocab, primarymeaning_vi, primarymeaning_en, is_star FROM ws_m2m_vocab" +
+                        " WHERE wordset_id = @id;";
+                    List<VocabWS> vocabs = new List<VocabWS>();
+                    using (var connect = new NpgsqlConnection(connectionString))
+                    {
+                        await connect.OpenAsync();
+                        using (var cmd = new NpgsqlCommand(query2, connect))
+                        {
+                            cmd.Parameters.AddWithValue($"@id", wsId);
+                            using (var reader = await cmd.ExecuteReaderAsync())
+                            {
+                                while (await reader.ReadAsync())
+                                {
+                                    VocabWS v = new VocabWS();
+                                    v.wsId = reader.GetGuid(0);
+                                    v.vocab = reader.GetString(1);
+                                    v.primaryMeaningVi = reader.GetString(2);
+                                    v.primaryMeaningEn = reader.GetString(3);
+                                    v.isStar = reader.GetBoolean(4);
+
+                                    vocabs.Add(v);
+                                }
+                            }
+                        }
+                    }
+                    return vocabs;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<VocabWS>> GetVocabsOfWSAsync(Guid id)
         {
             try
             {
                 string command = "SELECT wordset_id, vocab, primarymeaning_vi, primarymeaning_en, is_star FROM ws_m2m_vocab" +
                     " WHERE wordset_id = @id;";
-                List<Vocab> vocabs = new List<Vocab>();
+                List<VocabWS> vocabs = new List<VocabWS>();
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
@@ -155,10 +219,12 @@ namespace Infrastructure.Repository.Implements
                         {
                             while (await reader.ReadAsync())
                             {
-                                Vocab v = new Vocab();
+                                VocabWS v = new VocabWS();
+                                v.wsId = reader.GetGuid(0);
                                 v.vocab = reader.GetString(1);
                                 v.primaryMeaningVi = reader.GetString(2);
                                 v.primaryMeaningEn = reader.GetString(3);
+                                v.isStar = reader.GetBoolean(4);
 
                                 vocabs.Add(v);
                             }
@@ -177,7 +243,9 @@ namespace Infrastructure.Repository.Implements
         {
             try
             {
-                string command = "SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star FROM word_set WHERE wordset_id = @id;";
+                string command = "SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star " +
+                    "FROM word_set" +
+                    " WHERE wordset_id = @id;";
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
@@ -218,7 +286,7 @@ namespace Infrastructure.Repository.Implements
                 string query = @"
                 SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star 
                 FROM word_set 
-                WHERE account_id = @accountId;";
+                WHERE account_id = @accountId AND name_set != 'Saved Words';";
                 List<WordSet> wordSets = new List<WordSet>();
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
@@ -246,6 +314,68 @@ namespace Infrastructure.Repository.Implements
                     }
                 }
                 return wordSets;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(message: "Error fetching word sets " + ex.Message);
+            }
+        }
+
+        public async Task<bool> SaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId)
+        {
+            try
+            {
+                string query = @"
+                    SELECT wordset_id
+                    FROM word_set 
+                    WHERE account_id = @accountId AND name_set = 'Saved Words'";
+                Guid? wsId = null;
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+
+                    using (var cmd = new NpgsqlCommand(query, connect))
+                    {
+                        cmd.Parameters.AddWithValue("@accountId", accountId);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                wsId = reader.GetGuid(reader.GetOrdinal("wordset_id"));
+                            }
+                        }
+                    }
+                }
+                if ( !wsId.HasValue)
+                {
+                    var defaultWordSet = new WordSet
+                    {
+                        wordsetId = Guid.NewGuid(),
+                        nameSet = "Saved Words",
+                        accountId = accountId
+                    };
+                    var wordSetSuccess = await AddNewWordSetAsync(defaultWordSet);
+
+                    if (wordSetSuccess != null && wordSetSuccess.wordsetId != Guid.Empty)
+                    {
+                        wsId = wordSetSuccess.wordsetId;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                   
+                }
+
+                var success = await AddVocabsToWSAsync(vocabs, (Guid)wsId);
+                if (success)
+                {
+                    return true;
+                }
+
+                return false;
+
             }
             catch (Exception ex)
             {
@@ -302,6 +432,52 @@ namespace Infrastructure.Repository.Implements
             catch (Exception ex)
             {
                 throw;
+            }
+        }
+
+        public async Task<bool> UpdaVocabsToWteSAsync(List<VocabWS> vocabs, Guid wsId)
+        {
+            string command = @"
+                    UPDATE ws_m2m_vocab 
+                    SET vocab = @vocab, 
+                        primarymeaning_vi = @primarymeaning_vi, 
+                        primarymeaning_en = @primarymeaning_en, 
+                        is_star = @is_star
+                    WHERE wordset_id = @wordset_id AND vocab = @vocab;";
+
+            using (var connect = new NpgsqlConnection(connectionString))
+            {
+                await connect.OpenAsync();
+
+                using (var transaction = await connect.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        foreach (var v in vocabs)
+                        {
+                            using (var cmd = new NpgsqlCommand(command, connect, transaction))
+                            {
+                                cmd.Parameters.AddWithValue("@wordset_id", wsId);
+                                cmd.Parameters.AddWithValue("@vocab", v.vocab);
+                                cmd.Parameters.AddWithValue("@primarymeaning_vi", v.primaryMeaningVi);
+                                cmd.Parameters.AddWithValue("@primarymeaning_en", v.primaryMeaningEn);
+                                cmd.Parameters.AddWithValue("@is_star", v.isStar);
+
+                                await cmd.ExecuteNonQueryAsync();
+                            }
+                        }
+
+                        await transaction.CommitAsync();
+                        return true;
+
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        Console.WriteLine($"Error updateting vocabs in word set: {ex.Message}");
+                        return false;
+                    }
+                }
             }
         }
     }

@@ -117,7 +117,7 @@ namespace backend_english.Controllers
             try
             {
                 var vocabs = await wSService.GetVocabsOfWSAsync(wsId);
-                return Ok(new ApiResponse<IEnumerable<Vocab>>(200, null, vocabs));
+                return Ok(new ApiResponse<IEnumerable<VocabWS>>(200, null, vocabs));
             }
             catch (Exception ex)
             {
@@ -125,20 +125,42 @@ namespace backend_english.Controllers
             }
         }
 
-        [HttpPost("{wsId}/vocabs")]
-        public async Task<IActionResult> AddVocabsToWordSet(Guid wsId, [FromBody] List<Vocab> vocabs)
+        [HttpPut("{wsId}/vocabs")]
+        public async Task<IActionResult> UpdateVocabsInWordSet(Guid wsId, [FromBody] List<VocabWS> vocabs)
         {
             if (wsId == Guid.Empty || vocabs == null || vocabs.Count == 0)
                 return BadRequest(new ApiResponse<string>(400, "Invalid WordSet data.", null));
             try
             {
-                var success = await wSService.AddVocabsToWSAsync(vocabs, wsId);
-                return success ? Ok(new ApiResponse<string>(200, "Success", null)) : StatusCode(500, "Failed to add vocabs.");
+                var success = await wSService.UpdateVocabsToWSAsync(vocabs, wsId);
+                return success ? Ok(new ApiResponse<string>(200, "Success", null)) : StatusCode(500, "Failed to update vocabs.");
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Errorr adding vocabs: {ex.Message}");
+                return StatusCode(500, $"Error updating vocabs: {ex.Message}");
             }
         }
+
+        [HttpGet("saved-vocabs/{accountId}")]
+        public async Task<IActionResult> GetVocabsFromSavedWordSet(Guid accountId)
+        {
+            if (accountId == Guid.Empty)
+                return BadRequest(new ApiResponse<string>(400, "Invalid account ID.", null));
+            try
+            {
+                var vocabs = await wSService.GetSavedWordsOfAccount(accountId);
+                if(vocabs == null || vocabs.Count() == 0)
+                {
+                    return NotFound(new ApiResponse<string>(404, "No vocabularies found in Saved Words.", null));
+                }
+                return Ok(new ApiResponse<IEnumerable<VocabWS>>(200, "Vocabularies retrieved successfully.", vocabs));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>(500, $"Error retrieving vocabularies: {ex.Message}", null));
+            }
+        }
+
+
     }
 }
