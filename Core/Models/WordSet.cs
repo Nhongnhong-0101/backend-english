@@ -12,11 +12,12 @@ namespace Core.Models
         public string nameSet {get; set;}
         public string imageUrl {get; set;}
         public DateTime updatedAt {get; set;}
-        public Guid accountId { get; set; }
+        public Guid? accountId { get; set; }
         public bool isStar { get; set; }
-         
+        public bool isDefault { get; set; }
+
         public WordSet() { }
-        public WordSet(Guid wordsetId, string name, string imageUrl, DateTime updatedAt, Guid acoountId, bool isStar)
+        public WordSet(Guid wordsetId, string name, string imageUrl, DateTime updatedAt, Guid? acoountId, bool isStar, bool isDefault)
         {
             this.wordsetId = wordsetId;
             this.nameSet = name;
@@ -24,6 +25,7 @@ namespace Core.Models
             this.updatedAt = updatedAt;
             this.accountId = accountId;
             this.isStar = isStar;
+            this.isDefault = isDefault;
         }
     }
 }

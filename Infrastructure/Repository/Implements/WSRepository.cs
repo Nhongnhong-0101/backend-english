@@ -21,8 +21,8 @@ namespace Infrastructure.Repository.Implements
         {
             try
             {
-                string command = "INSERT INTO word_set (wordset_id, name_set, image_url, updated_at, account_id, is_star)" +
-                    " VALUES ( @wordset_id, @name_set, @image_url, @updated_at, @account_id, @is_star)" +
+                string command = "INSERT INTO word_set (wordset_id, name_set, image_url, updated_at, account_id, is_star, is_default)" +
+                    " VALUES ( @wordset_id, @name_set, @image_url, @updated_at, @account_id, @is_star, @is_default)" +
                     "RETURNING *;";
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
@@ -33,8 +33,10 @@ namespace Infrastructure.Repository.Implements
                         cmd.Parameters.AddWithValue("@name_set", wordSet.nameSet);
                         cmd.Parameters.AddWithValue("@image_url", (object?)wordSet.imageUrl?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@updated_at", DateTime.UtcNow);
-                        cmd.Parameters.AddWithValue("@account_id", wordSet.accountId);
+                        cmd.Parameters.Add("@account_id", NpgsqlTypes.NpgsqlDbType.Uuid)
+       .Value = (object?)wordSet.accountId ?? DBNull.Value;
                         cmd.Parameters.AddWithValue("@is_star", wordSet.isStar);
+                        cmd.Parameters.AddWithValue("@is_default", wordSet.isDefault);
 
                         using (var reader = await cmd.ExecuteReaderAsync())
                         {
@@ -45,8 +47,9 @@ namespace Infrastructure.Repository.Implements
                                 ws.nameSet = reader.GetString(1);
                                 ws.imageUrl = reader.IsDBNull(2) ? null : reader.GetString(2);
                                 ws.updatedAt = reader.GetDateTime(3);
-                                ws.accountId = reader.GetGuid(4);
+                                ws.accountId = reader.IsDBNull(4) ? (Guid?)null : reader.GetGuid(4);
                                 ws.isStar = reader.GetBoolean(5);
+                                ws.isDefault = reader.GetBoolean(6);
 
                                 return ws;
                             }
@@ -243,7 +246,7 @@ namespace Infrastructure.Repository.Implements
         {
             try
             {
-                string command = "SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star " +
+                string command = "SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star, is_default" +
                     "FROM word_set" +
                     " WHERE wordset_id = @id;";
                 using (var connect = new NpgsqlConnection(connectionString))
@@ -263,8 +266,9 @@ namespace Infrastructure.Repository.Implements
                                 ws.nameSet = reader.GetString(1);
                                 ws.imageUrl = reader.GetString(2);
                                 ws.updatedAt = reader.GetDateTime(3);
-                                ws.accountId = reader.GetGuid(4);
+                                ws.accountId = reader.IsDBNull(4) ? (Guid?)null : reader.GetGuid(4);
                                 ws.isStar = reader.GetBoolean(5);
+                                ws.isDefault = reader.GetBoolean(6);
 
                                 return ws;
                             }
@@ -284,9 +288,10 @@ namespace Infrastructure.Repository.Implements
             try
             {
                 string query = @"
-                SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star 
+                SELECT wordset_id, name_set, image_url, updated_at, account_id, is_star, is_default
                 FROM word_set 
-                WHERE account_id = @accountId AND name_set != 'Saved Words';";
+                WHERE (account_id = @accountId AND name_set != 'Saved Words')
+                OR (account_id IS NULL AND is_default = TRUE);";
                 List<WordSet> wordSets = new List<WordSet>();
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
@@ -305,8 +310,10 @@ namespace Infrastructure.Repository.Implements
                                 ws.nameSet = reader.GetString(reader.GetOrdinal("name_set"));
                                 ws.imageUrl = reader.IsDBNull(reader.GetOrdinal("image_url")) ? null : reader.GetString(reader.GetOrdinal("image_url"));
                                 ws.updatedAt = reader.GetDateTime(reader.GetOrdinal("updated_at"));
-                                ws.accountId = reader.GetGuid(reader.GetOrdinal("account_id"));
+                                int accountIdIndex = reader.GetOrdinal("account_id");
+                                ws.accountId = reader.IsDBNull(accountIdIndex) ? (Guid?)null : reader.GetGuid(accountIdIndex);
                                 ws.isStar = reader.GetBoolean(reader.GetOrdinal("is_star"));
+                                ws.isDefault = reader.GetBoolean(reader.GetOrdinal("is_default"));
 
                                 wordSets.Add(ws);
                             }
