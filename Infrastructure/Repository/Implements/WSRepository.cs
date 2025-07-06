@@ -325,16 +325,17 @@ namespace Infrastructure.Repository.Implements
         {
             try
             {
-                string query = @"
+                string queryUpdate = @"
                     SELECT wordset_id
                     FROM word_set 
                     WHERE account_id = @accountId AND name_set = 'Saved Words'";
+
                 Guid? wsId = null;
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
 
-                    using (var cmd = new NpgsqlCommand(query, connect))
+                    using (var cmd = new NpgsqlCommand(queryUpdate, connect))
                     {
                         cmd.Parameters.AddWithValue("@accountId", accountId);
 
@@ -437,13 +438,17 @@ namespace Infrastructure.Repository.Implements
 
         public async Task<bool> UpdaVocabsToWteSAsync(List<VocabWS> vocabs, Guid wsId)
         {
-            string command = @"
+            string updateCommand = @"
                     UPDATE ws_m2m_vocab 
                     SET vocab = @vocab, 
                         primarymeaning_vi = @primarymeaning_vi, 
                         primarymeaning_en = @primarymeaning_en, 
                         is_star = @is_star
                     WHERE wordset_id = @wordset_id AND vocab = @vocab;";
+
+            string insertCommand = @"
+                    INSERT INTO ws_m2m_vocab (wordset_id, vocab, primarymeaning_vi, primarymeaning_en, is_star)
+                    VALUES (@wordset_id, @vocab, @primarymeaning_vi, @primarymeaning_en, @is_star);";
 
             using (var connect = new NpgsqlConnection(connectionString))
             {
@@ -455,7 +460,7 @@ namespace Infrastructure.Repository.Implements
                     {
                         foreach (var v in vocabs)
                         {
-                            using (var cmd = new NpgsqlCommand(command, connect, transaction))
+                            using (var cmd = new NpgsqlCommand(updateCommand, connect, transaction))
                             {
                                 cmd.Parameters.AddWithValue("@wordset_id", wsId);
                                 cmd.Parameters.AddWithValue("@vocab", v.vocab);
@@ -463,7 +468,21 @@ namespace Infrastructure.Repository.Implements
                                 cmd.Parameters.AddWithValue("@primarymeaning_en", v.primaryMeaningEn);
                                 cmd.Parameters.AddWithValue("@is_star", v.isStar);
 
-                                await cmd.ExecuteNonQueryAsync();
+                                int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                                if (rowsAffected == 0)
+                                {
+                                    using (var insertCmd = new NpgsqlCommand(insertCommand, connect, transaction))
+                                    {
+                                        insertCmd.Parameters.AddWithValue("@wordset_id", wsId);
+                                        insertCmd.Parameters.AddWithValue("@vocab", v.vocab);
+                                        insertCmd.Parameters.AddWithValue("@primarymeaning_vi", v.primaryMeaningVi);
+                                        insertCmd.Parameters.AddWithValue("@primarymeaning_en", v.primaryMeaningEn);
+                                        insertCmd.Parameters.AddWithValue("@is_star", v.isStar);
+
+                                        await insertCmd.ExecuteNonQueryAsync();
+                                    }
+                                }
                             }
                         }
 
