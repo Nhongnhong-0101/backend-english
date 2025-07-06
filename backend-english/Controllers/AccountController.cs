@@ -12,10 +12,12 @@ namespace backend_english.Controllers
     {
         private readonly IAccountService accountService;
         private readonly IWSService wSService;
-        public AccountController(IAccountService accountService, IWSService wSService)
+        private readonly IPlanService planService;
+        public AccountController(IAccountService accountService, IWSService wSService, IPlanService planService)
         {
             this.accountService = accountService;
             this.wSService = wSService;
+            this.planService = planService;
         }
         [HttpGet]
         public async Task<IActionResult> GetAllAccount()
@@ -120,6 +122,23 @@ namespace backend_english.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error with service: {ex.Message}");
+            }
+        }
+
+        [HttpGet("current-plan")]
+        public async Task<IActionResult> GetCurrentPlanOfAccount(Guid accountId, string skill)
+        {
+            if (accountId == Guid.Empty || string.IsNullOrWhiteSpace(skill))
+                return BadRequest(new ApiResponse<string>(400, "Invalid account ID or skill.", null));
+            try
+            {
+                var plan = await planService.getCurrentPlanOfAccount(accountId, skill);
+
+                return Ok(new ApiResponse<Plan>(200, "", plan));
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>(500, $"Server error: {ex.Message}", null));
             }
         }
     }

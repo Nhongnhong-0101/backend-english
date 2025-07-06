@@ -17,6 +17,31 @@ namespace Infrastructure.Services.Implements
         {
             this.planRepository = planRepository;
         }
+
+        public async Task<Plan> getCurrentPlanOfAccount(Guid accountId, string skill)
+        {
+            try
+            {
+
+                var plans = await planRepository.GetPlansOfAccount(accountId, skill);
+                var firstNotDonePlan = plans.FirstOrDefault(p => !p.isDone);
+
+                if (firstNotDonePlan != null)
+                {
+                    return firstNotDonePlan;
+                }
+                else
+                {
+                    return plans.Last();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+        }
+
         public Task<IEnumerable<Plan>> GetPlansOfAccount(Guid accountId, string skill)
         {
             try

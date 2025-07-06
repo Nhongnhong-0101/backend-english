@@ -11,5 +11,6 @@ namespace Infrastructure.Services.Interfaces
     {
         Task<IEnumerable<Plan>> GetPlansOfAccount(Guid accountId, string skill);
         Task<bool> updateAccountPassPlan(Guid accountId, Guid planId);
+        Task<Plan> getCurrentPlanOfAccount(Guid accountId, string skill);
     }
 }
