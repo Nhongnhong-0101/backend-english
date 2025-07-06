@@ -160,7 +160,5 @@ namespace backend_english.Controllers
                 return StatusCode(500, new ApiResponse<string>(500, $"Error retrieving vocabularies: {ex.Message}", null));
             }
         }
-
-
     }
 }

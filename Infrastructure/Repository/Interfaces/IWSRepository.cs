@@ -19,6 +19,7 @@ namespace Infrastructure.Repository.Interfaces
         Task DeleteWordSetByIdAsync( Guid id );
         Task<bool> SaveVocabsToSavedWSAsync (List<VocabWS> vocabs, Guid accountId);
         Task<bool> UnSaveVocabsToSavedWSAsync (List<VocabWS> vocabs, Guid accountId);
+        Task<bool> CheckVocabIsSaved (VocabWS vocabs, Guid accountId);
         Task <IEnumerable<VocabWS>> GetSavedWordsWSAsync(Guid accountId);
     }
 }

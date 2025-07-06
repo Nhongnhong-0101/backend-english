@@ -39,6 +39,16 @@ namespace Infrastructure.Services.Implements
             return await wSRepository.AddVocabsToWSAsync(vocabs, wsId);
         }
 
+        public async Task<bool> CheckVocabIsSaved(VocabWS vocabs, Guid accountId)
+        {
+            if (accountId == Guid.Empty)
+            {
+                throw new ArgumentException("account ID cannot be empty");
+            }
+
+            return await wSRepository.CheckVocabIsSaved(vocabs, accountId);
+        }
+
         public async Task DeleteWordSetByIdAsync(Guid id)
         {
             if (id == Guid.Empty)

@@ -20,6 +20,7 @@ namespace Infrastructure.Services.Interfaces
 
         Task<bool> SaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId);
         Task<bool> UnSaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId);
+        Task<bool> CheckVocabIsSaved(VocabWS vocabs, Guid accountId);
 
         Task<IEnumerable<VocabWS>>GetSavedWordsOfAccount(Guid accountId);
     }

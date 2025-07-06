@@ -4,6 +4,7 @@ using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
+using System.Collections.Generic;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Infrastructure.Repository.Implements
@@ -34,7 +35,7 @@ namespace Infrastructure.Repository.Implements
                         cmd.Parameters.AddWithValue("@image_url", (object?)wordSet.imageUrl?? DBNull.Value);
                         cmd.Parameters.AddWithValue("@updated_at", DateTime.UtcNow);
                         cmd.Parameters.Add("@account_id", NpgsqlTypes.NpgsqlDbType.Uuid)
-       .Value = (object?)wordSet.accountId ?? DBNull.Value;
+                                            .Value = (object?)wordSet.accountId ?? DBNull.Value;
                         cmd.Parameters.AddWithValue("@is_star", wordSet.isStar);
                         cmd.Parameters.AddWithValue("@is_default", wordSet.isDefault);
 
@@ -102,6 +103,55 @@ namespace Infrastructure.Repository.Implements
                         return false;
                     }
                 }
+            }
+        }
+
+        public async Task<bool> CheckVocabIsSaved(VocabWS vocabs, Guid accountId)
+        {
+            try
+            {
+                string query = @"
+                    SELECT wordset_id
+                    FROM word_set 
+                    WHERE account_id = @accountId AND name_set = 'Saved Words'";
+                Guid? wsId = null;
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+
+                    using (var cmd = new NpgsqlCommand(query, connect))
+                    {
+                        cmd.Parameters.AddWithValue("@accountId", accountId);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                wsId = reader.GetGuid(reader.GetOrdinal("wordset_id"));
+                            }
+                        }
+                    }
+                    if (wsId.HasValue)
+                    {
+                        string checkQuery = @"SELECT 1
+                                FROM ws_m2m_vocab
+                                WHERE wordset_id = @wsId AND vocab = @vocab
+                                LIMIT 1; ";
+                        using (var checkCmd = new NpgsqlCommand(checkQuery, connect))
+                        {
+                            checkCmd.Parameters.AddWithValue("@wsId", wsId.Value);
+                            checkCmd.Parameters.AddWithValue("@vocab", vocabs.vocab);
+
+                            var result = await checkCmd.ExecuteScalarAsync();
+                            return result != null; 
+                        }
+                    }
+                }
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw;
             }
         }
 

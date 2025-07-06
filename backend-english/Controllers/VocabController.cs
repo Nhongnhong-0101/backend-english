@@ -110,5 +110,29 @@ namespace backend_english.Controllers
             }
         }
 
+        [HttpPost("check-vocab-saved")]
+        public async Task<IActionResult> IsVocabSaved([FromQuery] Guid accountId, [FromBody] Vocab vocab)
+        {
+            if (accountId == Guid.Empty || string.IsNullOrWhiteSpace(vocab.vocab))
+                return BadRequest(new ApiResponse<string>(400, "Account ID hoặc từ không hợp lệ.", null));
+
+            try
+            {
+                var wS = new VocabWS
+                {
+                    vocab = vocab.vocab,
+                    primaryMeaningVi = vocab.primaryMeaningVi,
+                    primaryMeaningEn = vocab.primaryMeaningEn,
+                    isStar = false
+                };
+
+                var isSaved = await wSService.CheckVocabIsSaved(wS, accountId);
+                return Ok(new ApiResponse<bool>(200, "Checked successfully.", isSaved));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>(500, $"Lỗi khi kiểm tra từ đã lưu: {ex.Message}", null));
+            }
+        }
     }
 }
