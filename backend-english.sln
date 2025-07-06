@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{D0F1274D-6B02-435A-8D3F-071CAD23E21C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sandbox1", "Sandbox1\Sandbox1.csproj", "{1FCD1815-95D0-443C-83EA-C578B2327513}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +29,15 @@ Global
 		{D0F1274D-6B02-435A-8D3F-071CAD23E21C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D0F1274D-6B02-435A-8D3F-071CAD23E21C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D0F1274D-6B02-435A-8D3F-071CAD23E21C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FCD1815-95D0-443C-83EA-C578B2327513}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FCD1815-95D0-443C-83EA-C578B2327513}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FCD1815-95D0-443C-83EA-C578B2327513}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FCD1815-95D0-443C-83EA-C578B2327513}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FA894D0D-6A7A-463B-86F5-914D91644B3F}
 	EndGlobalSection
 EndGlobal

@@ -384,6 +384,74 @@ namespace Infrastructure.Repository.Implements
             }
         }
 
+        public async Task<bool> UnSaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId)
+        {
+            try
+            {
+                string queryUpdate = @"
+                    SELECT wordset_id
+                    FROM word_set 
+                    WHERE account_id = @accountId AND name_set = 'Saved Words'";
+                string deleteCommand = @"
+                    DELETE FROM ws_m2m_vocab
+                    WHERE wordset_id = @wordset_id AND vocab = @vocab";
+
+                Guid? wsId = null;
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+
+                    using (var cmd = new NpgsqlCommand(queryUpdate, connect))
+                    {
+                        cmd.Parameters.AddWithValue("@accountId", accountId);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                wsId = reader.GetGuid(reader.GetOrdinal("wordset_id"));
+                            }
+                        }
+                    }
+
+                    if (wsId == null)
+                        throw new Exception("Không tìm thấy wordset 'Saved Words' cho account này");
+
+                    using (var transaction = await connect.BeginTransactionAsync())
+                    {
+                        try
+                        {
+                            foreach (var v in vocabs)
+                            {
+                                using (var cmd = new NpgsqlCommand(deleteCommand, connect, transaction))
+                                {
+                                    cmd.Parameters.AddWithValue("@wordset_id", wsId);
+                                    cmd.Parameters.AddWithValue("@vocab", v.vocab);
+
+                                    await cmd.ExecuteNonQueryAsync();
+                                }
+                            }
+
+                            await transaction.CommitAsync();
+                            return true;
+                        }
+                        catch (Exception ex)
+                        {
+                            await transaction.RollbackAsync();
+                            Console.WriteLine($"Lỗi khi xóa từ khỏi Saved Words: {ex.Message}");
+                            return false;
+                        }
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(message: "Error fetching word sets " + ex.Message);
+            }
+        }
+
         public async Task<WordSet?> UpdateWordSetAsync(WordSet wordSet)
         {
             try

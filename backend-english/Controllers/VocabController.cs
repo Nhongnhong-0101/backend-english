@@ -82,5 +82,33 @@ namespace backend_english.Controllers
             }
         }
 
+        [HttpPost("unsave-vocabs/{accountId}")]
+        public async Task<IActionResult> UnsaveVocabsFromSavedWordSet(Guid accountId, [FromBody] List<Vocab> vocabs)
+        {
+            if (accountId == Guid.Empty || vocabs == null || vocabs.Count == 0)
+                return BadRequest(new ApiResponse<string>(400, "Invalid account ID or vocabulary data.", null));
+
+            try
+            {
+                List<VocabWS> vocabWs = vocabs.Select(v => new VocabWS
+                {
+                    vocab = v.vocab,
+                    primaryMeaningEn = v.primaryMeaningEn,
+                    primaryMeaningVi = v.primaryMeaningVi,
+                    isStar = false 
+                }).ToList();
+
+                var success = await wSService.UnSaveVocabsToSavedWSAsync(vocabWs, accountId);
+
+                return success
+                    ? Ok(new ApiResponse<string>(200, "Vocabularies removed from Saved Words successfully.", null))
+                    : StatusCode(500, new ApiResponse<string>(500, "Failed to remove vocabularies from Saved Words.", null));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>(500, $"Error removing vocabularies: {ex.Message}", null));
+            }
+        }
+
     }
 }

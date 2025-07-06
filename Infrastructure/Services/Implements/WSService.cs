@@ -99,6 +99,16 @@ namespace Infrastructure.Services.Implements
             return await wSRepository.SaveVocabsToSavedWSAsync(vocabs, accountId);
         }
 
+        public async Task<bool> UnSaveVocabsToSavedWSAsync(List<VocabWS> vocabs, Guid accountId)
+        {
+            if (accountId == Guid.Empty)
+            {
+                throw new ArgumentException("account ID cannot be empty");
+            }
+
+            return await wSRepository.UnSaveVocabsToSavedWSAsync(vocabs, accountId);
+        }
+
         public async Task<bool> UpdateVocabsToWSAsync(List<VocabWS> vocabs, Guid wsId)
         {
             if (wsId == Guid.Empty)
