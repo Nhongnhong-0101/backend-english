@@ -438,6 +438,7 @@ namespace Infrastructure.Services.Implements
             catch (Exception ex)
             {
                 Console.WriteLine($"❌ Error in FinishChatAndGetReview: {ex.Message}");
+                return null;
             }
         }
          
