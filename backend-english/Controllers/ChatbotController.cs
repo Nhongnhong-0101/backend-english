@@ -92,15 +92,23 @@ namespace backend_english.Controllers
         }
 
         [HttpPost("keywords-feedback")]
-        public async Task<IActionResult> GetKeywordsFeedback([FromBody] KeywordsFbRequest request)
+        public async Task<IActionResult> GetKeywordsFeedback([FromForm] KeywordsFbRequest request)
         {
             try
             {
-                if (request.keywords == null || request.keywords.Count == 0 || string.IsNullOrWhiteSpace(request.userSentence))
+                if (request.keywords == null || request.keywords.Count == 0)
+                    return BadRequest("Keywords must not be empty.");
+                if (request.audio == null || request.audio.Length == 0)
+                    return BadRequest("Audio file is required.");
+
+                var userSentence = await chatbotService.TranscriptAudioAsync(request.audio);
+
+                if (String.IsNullOrEmpty(userSentence))
                 {
-                    return BadRequest("Keywords and sentence must not be empty.");
+                    return BadRequest(new ApiResponse<string>(400, "Không thể nhận diện được câu nói. Vui lòng nói rõ hơn.", null));
                 }
-                var response = await chatbotService.GetKeywordsFeedbackAsync(request.keywords, request.userSentence);
+
+                var response = await chatbotService.GetKeywordsFeedbackAsync(request.keywords, userSentence, request.level);
                 return Ok(new ApiResponse<KeywordsFbResponse>(200, null, response));
             }
             catch (Exception ex)
