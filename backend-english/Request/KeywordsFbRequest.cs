@@ -3,6 +3,7 @@
     public class KeywordsFbRequest
     {
         public List<string> keywords { get; set; } = new();
-        public string userSentence { get; set; } = string.Empty;
+        public int level { get; set; }
+        public IFormFile audio { get; set; }
     }
 }

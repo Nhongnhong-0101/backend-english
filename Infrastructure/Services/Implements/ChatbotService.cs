@@ -2,6 +2,7 @@
 using Infrastructure.Services.Response;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.AspNetCore.Http;
+using Microsoft.CognitiveServices.Speech.Diagnostics.Logging;
 using Microsoft.Extensions.Configuration;
 using OpenAI;
 using OpenAI.Audio;
@@ -25,6 +26,7 @@ namespace Infrastructure.Services.Implements
         private string filePath = String.Empty;
         private string direction = "You are an English tutor, help me learn to communicate effectively.";
         private string mainTopic = String.Empty;
+        private List<ChatMessageRecord> conversationHistory = new();
         private static readonly HttpClient client = new HttpClient();
         private readonly ISQuestionService questionService;
 
@@ -40,16 +42,23 @@ namespace Infrastructure.Services.Implements
 
         public async Task<string> SendToGPTAsync(List<ChatMessage> chatHistory)
         {
+            try
+            {
+                ChatClient client = new(
+                    model: "gpt-4o-mini",
+                    apiKey: gptKey
+                );
 
-            ChatClient client = new(
-                model: "gpt-4o-mini",
-                apiKey: gptKey
-            );
-           
-            ChatCompletion completion = client.CompleteChat(chatHistory);
+                ChatCompletion completion = client.CompleteChat(chatHistory);
 
-            Console.WriteLine(completion.Content[0].Text);
-            return completion.Content[0].Text;  
+                Console.WriteLine(completion.Content[0].Text);
+                return completion.Content[0].Text;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Error calling GPT: " + ex.Message);
+                return null;
+            }
         }
 
         public async Task<string> TranscriptAudioAsync(IFormFile recored)
@@ -245,34 +254,82 @@ namespace Infrastructure.Services.Implements
                 throw;
             }
         }
-        public async Task<KeywordsFbResponse> GetKeywordsFeedbackAsync(List<string> keywords, string userSentence)
+        public async Task<KeywordsFbResponse> GetKeywordsFeedbackAsync(List<string> keywords, string userSentence, int level)
         {
             try
             {
-                var prompt = $@"
-                    You are an English teacher.
+                string prompt = "";
+                string keywordsJson = JsonSerializer.Serialize(keywords);
 
-                    The student was given these keywords: {JsonSerializer.Serialize(keywords)}
+                switch (level)
+                {
+                    case 1:
+                        prompt = $@"
+                                Bạn là một giáo viên dạy tiếng Anh cho người mới bắt đầu.
 
-                    The student wrote this sentence: ""{userSentence}""
+                                Học viên được giao các từ khóa: {keywordsJson}
+                                Học viên đã viết câu: ""{userSentence}""
 
-                    Your tasks:
-                    1. Evaluate the sentence: is it grammatically correct and natural?
-                    2. Suggest a better version using the given keywords (if possible).
-                    3. Explain your suggestion.
+                                Nhiệm vụ của bạn:
+                                1. Kiểm tra câu học viên viết có đúng ngữ pháp không, trả lời ngắn gọn.
+                                2. Nếu có lỗi ngữ pháp, hãy sửa lại câu đó.
+                                3. Giải thích lỗi bằng tiếng Việt dễ hiểu.
 
-                    Respond in this JSON format:
-                    {{
-                      ""evaluation"": """",
-                      ""suggestion"": """",
-                      ""explanation"": """"
-                    }}
-                    ";
+                                Hãy phản hồi theo định dạng JSON sau:
+                                {{
+                                  ""evaluation"": ""(Câu này đúng hay sai ngữ pháp)"",
+                                  ""suggestion"": ""(Nếu có sửa thì ghi ở đây, còn không thì giữ nguyên)"",
+                                  ""explanation"": ""(Giải thích bằng tiếng Việt)""
+                                }}";
+                        break;
+
+                    case 2:
+                        prompt = $@"
+                                Bạn là một giáo viên dạy tiếng Anh ở mức độ B1.
+
+                                Học viên được giao các từ khóa: {keywordsJson}
+                                Học viên đã viết câu: ""{userSentence}""
+
+                                Nhiệm vụ của bạn:
+                                1. Đánh giá câu học viên viết (đúng/sai ngữ pháp, tự nhiên hay không).
+                                2. Gợi ý cách viết tốt hơn (sử dụng từ khóa nếu có thể).
+                                3. Giải thích vì sao cách viết đó tốt hơn.
+
+                                Hãy phản hồi theo định dạng JSON sau:
+                                {{
+                                  ""evaluation"": ""(Nhận xét chung về câu của học viên bằng tiếng Việt)"",
+                                  ""suggestion"": ""(Gợi ý câu hay hơn)"",
+                                  ""explanation"": ""(Giải thích lý do và cách dùng từ/cấu trúc)""
+                                }}";
+                        break;
+
+                    case 3:
+                    default:
+                        prompt = $@"
+                                You are an advanced English teacher for level A1.
+
+                                The student was given these keywords: {keywordsJson}
+                                The student wrote: ""{userSentence}""
+
+                                Your tasks:
+                                1. Evaluate the grammar and naturalness of the sentence.
+                                2. Suggest a better version using the keywords (if needed).
+                                3. Explain why the suggestion is better.
+
+                                Respond in this JSON format:
+                                {{
+                                  ""evaluation"": ""(Short assessment)"",
+                                  ""suggestion"": ""(Improved sentence)"",
+                                  ""explanation"": ""(Why it's better)""
+                                }}";
+                        break;
+                }
+
                 SystemChatMessage systemChatMessage;
                 systemChatMessage = new SystemChatMessage(prompt);
                 var messages = new List<ChatMessage>
                 {
-                    new SystemChatMessage("You are an English teacher assistant."),
+                    new SystemChatMessage("You are a helpful and professional English teacher."),
                     new UserChatMessage(prompt),
                 };
                 var response = await SendToGPTAsync(messages);
@@ -284,15 +341,22 @@ namespace Infrastructure.Services.Implements
                 var explanation = root.GetProperty("explanation").GetString();
 
                 KeywordsFbResponse fb = new KeywordsFbResponse();
+                fb.userSentence = userSentence;
                 fb.evaluation = evaluation;
                 fb.suggestion = suggestion;
                 fb.explanation = explanation;
 
                 return fb;
             }
-            catch
+            catch (Exception ex)
             {
-                throw;
+                Console.WriteLine($"Error in GetKeywordsFeedbackAsync: {ex.Message}");
+                return new KeywordsFbResponse
+                {
+                    evaluation = "Đã xảy ra lỗi trong quá trình xử lý.",
+                    suggestion = "",
+                    explanation = ex.Message
+                };
             }
         }
         private string CleanText(string text)
@@ -313,5 +377,90 @@ namespace Infrastructure.Services.Implements
             return content;
         }
 
+        public async Task<string> FinishChatAndGetReview(List<ChatMessageRecord> chatHistory)
+        {
+            try
+            {
+                var conversation = GetConversationHistory();
+
+                string history = string.Join("\n", conversation.Select(m => $"{m.role.ToUpper()}: {m.message}"));
+
+                int level = conversation.FirstOrDefault(m => m.role == "user")?.level ?? 1; //kco thi level 1
+
+                string prompt = level switch
+                {
+                    1 or 2 => $@"
+                            Bạn là một giáo viên tiếng Anh.
+
+                            Dưới đây là toàn bộ đoạn hội thoại giữa học viên và trợ lý AI:
+
+                            {history}
+
+                            Hãy nhận xét tổng quan về cuộc hội thoại của học viên:
+                            1. Học viên dùng ngôn ngữ tự nhiên chưa?
+                            2. Ngữ pháp và phát âm có lỗi gì không? (Nếu có thì chỉ ra)
+                            3. Đưa ra gợi ý để cải thiện trong các cuộc hội thoại tiếp theo.
+
+                            Trả lời bằng tiếng Việt.",
+
+                    3 => $@"
+                            You are an English teacher.
+
+                            Here is the full conversation between the student and the AI assistant:
+
+                            {history}
+
+                            Please provide an overall feedback for the student:
+                            1. Was the student natural in using English?
+                            2. Any grammar or pronunciation mistakes?
+                            3. Suggestions to improve in future conversations.
+
+                            Respond in English.",
+                    _ => throw new ArgumentOutOfRangeException(nameof(level))
+                };
+
+                var messages = new List<ChatMessage>
+                {
+                    new SystemChatMessage("You are an English teacher assistant."),
+                    new UserChatMessage(prompt),
+                };
+
+
+                string review = await SendToGPTAsync(messages);
+
+                if (review != null)
+                {
+                    ClearSession();
+                    return review;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error in FinishChatAndGetReview: {ex.Message}");
+            }
+        }
+         
+
+        public void AddMessage(string role, string message, int level)
+        {
+            conversationHistory.Add(new ChatMessageRecord
+            {
+                role = role,
+                message = message,
+                timestamp = DateTime.UtcNow,
+                level = level
+            });
+        }
+
+        public List<ChatMessageRecord> GetConversationHistory()
+        {
+            return conversationHistory;
+        }
+
+        public void ClearSession()
+        {
+            conversationHistory.Clear();
+        }
     }
 }

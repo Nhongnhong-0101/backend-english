@@ -8,6 +8,7 @@ namespace Infrastructure.Services.Response
 {
     public class KeywordsFbResponse
     {
+        public string userSentence {  get; set; }
         public string evaluation { get; set; }
         public string suggestion { get; set; }
         public string explanation { get; set; }
