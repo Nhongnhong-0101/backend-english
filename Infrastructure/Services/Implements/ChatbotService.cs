@@ -275,12 +275,12 @@ namespace Infrastructure.Services.Implements
                                 2. Nếu có lỗi ngữ pháp, hãy sửa lại câu đó.
                                 3. Giải thích lỗi bằng tiếng Việt dễ hiểu.
 
-                                Hãy phản hồi theo định dạng JSON sau:
-                                {{
-                                  ""evaluation"": ""(Câu này đúng hay sai ngữ pháp)"",
-                                  ""suggestion"": ""(Nếu có sửa thì ghi ở đây, còn không thì giữ nguyên)"",
-                                  ""explanation"": ""(Giải thích bằng tiếng Việt)""
-                                }}";
+                                ⚠️ Chỉ trả về đúng **định dạng JSON object** sau, **không thêm chú thích, không bao gồm dấu ```json**:
+                                    {{
+                                      ""evaluation"": ""(Câu này đúng hay sai ngữ pháp)"",
+                                      ""suggestion"": ""(Nếu có sửa thì ghi ở đây, còn không thì giữ nguyên)"",
+                                      ""explanation"": ""(Giải thích bằng tiếng Việt)""
+                                    }}";
                         break;
 
                     case 2:
@@ -295,7 +295,7 @@ namespace Infrastructure.Services.Implements
                                 2. Gợi ý cách viết tốt hơn (sử dụng từ khóa nếu có thể).
                                 3. Giải thích vì sao cách viết đó tốt hơn.
 
-                                Hãy phản hồi theo định dạng JSON sau:
+                                ⚠️ Chỉ trả về đúng **định dạng JSON object** sau, **không thêm chú thích, không bao gồm dấu ```json**:
                                 {{
                                   ""evaluation"": ""(Nhận xét chung về câu của học viên bằng tiếng Việt)"",
                                   ""suggestion"": ""(Gợi ý câu hay hơn)"",
@@ -316,12 +316,12 @@ namespace Infrastructure.Services.Implements
                                 2. Suggest a better version using the keywords (if needed).
                                 3. Explain why the suggestion is better.
 
-                                Respond in this JSON format:
-                                {{
-                                  ""evaluation"": ""(Short assessment)"",
-                                  ""suggestion"": ""(Improved sentence)"",
-                                  ""explanation"": ""(Why it's better)""
-                                }}";
+                                ⚠️ Only return a valid **JSON object**, no extra explanation, no triple backticks:
+                                    {{
+                                      ""evaluation"": ""(Short assessment)"",
+                                      ""suggestion"": ""(Improved sentence)"",
+                                      ""explanation"": ""(Why it's better)""
+                                    }}";    
                         break;
                 }
 
