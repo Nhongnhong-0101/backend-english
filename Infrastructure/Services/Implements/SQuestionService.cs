@@ -9,6 +9,7 @@ using Npgsql;
 using OpenAI;
 using OpenAI.Embeddings;
 using Org.BouncyCastle.Tls.Crypto.Impl.BC;
+using Pgvector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -320,6 +321,74 @@ namespace Infrastructure.Services.Implements
             try
             {
                 return repository.UpdateQuesionAsync(sp);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public async Task<List<QuestionResponse>> GetQuestionsNearTopic(Vector topic, int num)
+        {
+            try
+            {
+                List<QuestionResponse> responses = new List<QuestionResponse>();
+                List<SpeakingQuestion> questions = await repository.FindByTopicVectorAsync(topic, num);
+                foreach (var question in questions)
+                {
+                    switch (question.contentType)
+                    {
+                        case "sentence":
+                        case "word":
+                            QuestionResponse response = new QuestionResponse();
+                            response.questionId = question.questionId;
+                            response.instructions = "Repeat this word/sentence clearly";
+                            response.type = "sentence";
+                            response.data = new Dictionary<string, string>
+                                {
+                                    { "sentence", question.sentence }
+                                };
+                            responses.Add(response);
+                            break;
+
+                        case "dialogue":
+                            QuestionResponse r = new QuestionResponse();
+                            r.questionId = question.questionId;
+                            r.instructions = "Repeat this sentence";
+                            r.type = "dialogue";
+                            r.data = parseToDialogue(question);
+                            responses.Add(r);
+
+                            break;
+
+                        case "reorder":
+                            QuestionResponse q = new QuestionResponse();
+                            q.questionId = question.questionId;
+                            q.instructions = "Repeat this sentence";
+                            q.type = "reorder";
+                            q.data = parseToReorder(question);
+                            responses.Add(q);
+
+                            break;
+
+                        case "prompt":
+                            QuestionResponse p = new QuestionResponse();
+                            p.questionId = question.questionId;
+                            p.instructions = "Let talk about this topic";
+                            p.type = "prompt";
+                            p.data = new Dictionary<string, string>
+                                {
+                                    { "sentence", question.sentence }
+                                };
+                            responses.Add(p);
+
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+                return responses;
             }
             catch
             {

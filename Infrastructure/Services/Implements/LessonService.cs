@@ -1,10 +1,10 @@
 ﻿using Core.Models;
 using Infrastructure.Repository.Interfaces;
 using Infrastructure.Services.Interfaces;
+using Pgvector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -107,6 +107,18 @@ namespace Infrastructure.Services.Implements
                     return sorted;
                 }
                 return questionList;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public Task<List<SpeakingQuestion>> FindByTopicVectorAsync(Vector embeddingTopic, int limit = 5)
+        {
+            try
+            {
+                return questionRepository.FindByTopicVectorAsync(embeddingTopic, limit);
             }
             catch
             {

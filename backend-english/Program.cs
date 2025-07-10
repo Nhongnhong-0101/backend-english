@@ -8,9 +8,11 @@ using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using Pgvector.Dapper;
-using System.Security.Cryptography.X509Certificates;
+using Pgvector;
 using System.Text;
+
 
 namespace backend_english
 {
@@ -19,7 +21,8 @@ namespace backend_english
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            SqlMapper.AddTypeHandler(new VectorTypeHandler());
+
+
             var connectionString = builder.Configuration.GetConnectionString("Supabase");
 
             if (string.IsNullOrEmpty(connectionString))
@@ -116,6 +119,9 @@ namespace backend_english
 
             );
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+            NpgsqlConnection.GlobalTypeMapper.UseVector();
+            SqlMapper.AddTypeHandler(new VectorTypeHandler());
 
             var app = builder.Build();
             if (app.Environment.IsDevelopment())

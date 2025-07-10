@@ -1,4 +1,5 @@
 ﻿using Core.Models;
+using Pgvector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,5 +14,7 @@ namespace Infrastructure.Services.Interfaces
         public Task<bool> UpdateAccountPassLesson(Guid accountId, Guid lessonId);
 
         public Task<IEnumerable<SpeakingQuestion>> GetQuestionsOfLesson(Guid idLesson, int limit);
+
+        public Task<List<SpeakingQuestion>> FindByTopicVectorAsync(Vector embeddingTopic, int limit);
     }
 }

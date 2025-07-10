@@ -1,5 +1,6 @@
 ﻿using Core.Models;
 using Infrastructure.Services.Response;
+using Pgvector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,6 +28,8 @@ namespace Infrastructure.Services.Interfaces
 
         public Task<SpeakingQuestion> GetByIdAsync(Guid idQ);
         public Task<SpeakingQuestion> UpdateQuestionAsync(SpeakingQuestion sp);
+
+        public Task<List<QuestionResponse>> GetQuestionsNearTopic(Vector topic, int num);
 
     }
 }

@@ -6,6 +6,8 @@ using Infrastructure.Services.Interfaces;
 using Infrastructure.Services.Response;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Npgsql;
+using Pgvector;
 
 namespace backend_english.Controllers
 {
@@ -209,20 +211,37 @@ namespace backend_english.Controllers
         }
 
         [HttpPost("update-embedding")]
-        public async Task<IActionResult> UpdateEmbedding([FromBody] Guid idQuestion)
+        public async Task<IActionResult> UpdateEmbedding()
         {
             try
             {
-                var success = await questionService.GetByIdAsync(idQuestion);
+                var questionIds = new List<Guid>
+                {
+                    Guid.Parse("8cb4fa1f-e6a7-4e21-b7bc-b46a737dc87e"),
+                    Guid.Parse("969eb735-c877-4d6f-9c88-299ff7dd4c63"),
+                    Guid.Parse("9fa2c7ab-4bcc-4ff8-be86-6dcf3d10c908"),
+                    Guid.Parse("aae1c9d8-5f5a-468c-af96-c3b8e9bde8ef"),
+                    Guid.Parse("ab9d2eb7-daf2-4e89-995d-5f968b77d2e0"),
+                    Guid.Parse("b222266d-1e05-4d96-959e-c569cb123ccd"),
+                    Guid.Parse("bc74e50d-3647-4f9e-be72-590824988e4b"),
+                    Guid.Parse("d55e69ce-aac7-46c7-8a8a-0d91655cbd72"),
+                    Guid.Parse("ddc8c03f-e7ff-4d89-a723-b6fcfcd0ee8e"),
+                    Guid.Parse("f7b45996-5058-400c-9707-c360e3b9cc2c")
+                };
+                foreach(Guid idQuestion in questionIds)
+                {
+                    var success = await questionService.GetByIdAsync(idQuestion);
 
-                if (success.sentence != null)
-                    return NotFound(new { message = "Không tìm thấy câu hỏi hoặc lỗi khi tạo embedding." });
+                    if (success.sentence == null)
+                        return NotFound(new { message = "Không tìm thấy câu hỏi hoặc lỗi khi tạo embedding." });
+                    var vector = await chatbotService.CreateEmbeddingAsync(success.sentence);
+                    success.embedding = new Pgvector.Vector(vector);
 
-                //success.embedding =  await chatbotService.CreateEmbeddingAsync(success.sentence);
+                    var updated = await questionService.UpdateQuestionAsync(success);
 
-                var updated = await questionService.UpdateQuestionAsync(success);
+                }
+                    return Ok(new { message = "Cập nhật embedding thành công." });
 
-                return Ok(new { message = "Cập nhật embedding thành công." });
             }
             catch (Exception ex)
             {
@@ -230,6 +249,26 @@ namespace backend_english.Controllers
             }
         }
 
+        [HttpGet("questions-by-topic-embedding")]
+        public async Task<IActionResult> GetQuestionsByTopic([FromQuery] string topic, [FromQuery] int topK = 5)
+        {
+            if (string.IsNullOrWhiteSpace(topic))
+                return BadRequest("Topic must not be empty.");
+
+            try
+            {
+                var vector = await chatbotService.CreateEmbeddingAsync(topic);
+                Vector topicVector = new Vector(vector);
+
+                var data = await questionService.GetQuestionsNearTopic(topicVector, topK);
+
+                return Ok(new ApiResponse<List<QuestionResponse>>(200, null, data));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal Error: {ex.Message}");
+            }
+        }
         public class SaveSpeakingResultRequest
         {
             public List<UserSpeakingResult> Results { get; set; } = new();

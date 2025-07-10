@@ -9,15 +9,48 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pgvector;
 
 namespace Infrastructure.Repository.Implements
 {
     public class SQuestionRepository : ISQuestionRepository
     {
         private readonly string connectionString;
+
         public SQuestionRepository(IConfiguration configuration)
         {
             this.connectionString = configuration.GetConnectionString("Supabase");
+        }
+
+        public async Task<List<SpeakingQuestion>> FindByTopicVectorAsync(Vector topicEmbedding, int limit =5)
+        {
+            try
+            {
+                using var connection = new NpgsqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                string query = @"
+                                SELECT 
+                                    question_id AS questionId,
+                                    sentence,
+                                    level,
+                                    topic,
+                                    content_type AS contentType,
+                                    embedding
+                                FROM speaking_question
+                                ORDER BY embedding <-> @InputEmbedding
+                                LIMIT @Limit";
+
+                return (await connection.QueryAsync<SpeakingQuestion>(query, new
+                {
+                    InputEmbedding = topicEmbedding,
+                    Limit = limit
+                })).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task<List<SpeakingQuestion>> GetAllAsync()
@@ -63,6 +96,7 @@ namespace Infrastructure.Repository.Implements
             {
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
+
                     await connect.OpenAsync();
                     string query = @"
                         SELECT 
@@ -233,48 +267,6 @@ namespace Infrastructure.Repository.Implements
                 Console.WriteLine($"❌ Lỗi khi cập nhật câu hỏi: {ex.Message}");
                 throw;
             }
-        }
-
-    private float[] ParsePgvector(object value)
-        {
-            try
-            {
-                if (value == null) return Array.Empty<float>();
-
-                // Trường hợp embedding trả về là string "[0.1, 0.2, 0.3]"
-                if (value is string str)
-                {
-                    str = str.Trim('[', ']'); // bỏ ngoặc
-                    return str.Split(',')
-                              .Select(s => float.Parse(s.Trim(), System.Globalization.CultureInfo.InvariantCulture))
-                              .ToArray();
-                }
-
-                // Trường hợp embedding là JsonElement (nếu dùng System.Text.Json deserialize)
-                if (value is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-                {
-                    var floats = new List<float>();
-                    foreach (var element in jsonElement.EnumerateArray())
-                    {
-                        if (element.TryGetSingle(out float val))
-                            floats.Add(val);
-                    }
-                    return floats.ToArray();
-                }
-
-                // Trường hợp embedding là ReadOnlyMemory<float> (nếu dùng thư viện hỗ trợ vector như pgvector-dotnet)
-                if (value is ReadOnlyMemory<float> memory)
-                {
-                    return memory.ToArray();
-                }
-
-                throw new InvalidCastException("Không thể parse embedding từ kiểu dữ liệu: " + value.GetType().Name);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Lỗi ParsePgvector: " + ex.Message);
-                return Array.Empty<float>();
-            }
-        }
+        } 
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Core.Models;
+using Pgvector;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,6 +19,8 @@ namespace Infrastructure.Repository.Interfaces
         Task<List<SpeakingQuestion>> GetQuestionsAsync(string topic, string contentType, int num = 3 );
 
         Task<SpeakingQuestion> UpdateQuesionAsync(SpeakingQuestion question);
+
+        Task<List<SpeakingQuestion>> FindByTopicVectorAsync(Vector topicEmbedding, int limit);
 
     }
 }
