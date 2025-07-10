@@ -8,10 +8,10 @@ namespace Core.Models
 {
     public class IrregularVerb
     {
-        private string infinitive;
-        private string pastSimple;
-        private string pastParticiple;
-        private string meaning;
+        public string infinitive { get; set; }
+        public string pastSimple { get; set; }
+        public string pastParticiple { get; set; }
+        public string meaning { get; set; }
         public IrregularVerb(string Infinitive, string PastSimple, string PastParticiple, string Meaning)
         {
             infinitive = Infinitive;

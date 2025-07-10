@@ -8,12 +8,12 @@ namespace Core.Models
 {
     public class Idiom
     {
-        private string idiom;
-        private string meaning;
-        public Idiom(string idiom, string Meaning)
+        public string idiom { get; set; }
+        public string meaning { get; set; }
+        public Idiom(string idiom, string meaning)
         {
             this.idiom = idiom;
-            meaning = Meaning;
+            this.meaning = meaning;
         }
     }
 }

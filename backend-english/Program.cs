@@ -51,6 +51,8 @@ namespace backend_english
             builder.Services.AddSingleton<ISQuestionService,SQuestionService>();
             builder.Services.AddSingleton<IPlanService,PlanService>();
             builder.Services.AddSingleton<ILessonService,LessonService>();
+            builder.Services.AddSingleton<IIdiomService,IdiomServicce>();
+            builder.Services.AddSingleton<IVerbService,VerbService>();
 
             // Add services to the container.
 
