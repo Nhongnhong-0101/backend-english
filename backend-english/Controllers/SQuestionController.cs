@@ -207,6 +207,29 @@ namespace backend_english.Controllers
 
 
         }
+
+        [HttpPost("update-embedding")]
+        public async Task<IActionResult> UpdateEmbedding([FromBody] Guid idQuestion)
+        {
+            try
+            {
+                var success = await questionService.GetByIdAsync(idQuestion);
+
+                if (success.sentence != null)
+                    return NotFound(new { message = "Không tìm thấy câu hỏi hoặc lỗi khi tạo embedding." });
+
+                //success.embedding =  await chatbotService.CreateEmbeddingAsync(success.sentence);
+
+                var updated = await questionService.UpdateQuestionAsync(success);
+
+                return Ok(new { message = "Cập nhật embedding thành công." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi server: " + ex.Message });
+            }
+        }
+
         public class SaveSpeakingResultRequest
         {
             public List<UserSpeakingResult> Results { get; set; } = new();

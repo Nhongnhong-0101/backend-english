@@ -3,6 +3,7 @@ using Dapper;
 using Infrastructure.Repository.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Npgsql;
+using NpgsqlTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,9 +64,20 @@ namespace Infrastructure.Repository.Implements
                 using (var connect = new NpgsqlConnection(connectionString))
                 {
                     await connect.OpenAsync();
-                    string query = "SELECT * FROM speaking_question WHERE question_id = @QuestionId";
-                    var result = await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(query, new { QuestionId = questionId });
-                    return result;
+                    string query = @"
+                        SELECT 
+                            question_id AS questionId,
+                            sentence,
+                            level,
+                            topic,
+                            content_type AS contentType,
+                            embedding
+                        FROM speaking_question
+                        WHERE question_id = @QuestionId";
+                    return await connect.QueryFirstOrDefaultAsync<SpeakingQuestion>(
+                            query,
+                            new { QuestionId = questionId }
+                        );
                 }
             }
             catch (Exception ex)
@@ -179,6 +191,89 @@ namespace Infrastructure.Repository.Implements
             {
                 Console.WriteLine($"Error in GetFirstByTopicAsync: {ex.Message}");
                 throw;
+            }
+        }
+
+        public async Task<SpeakingQuestion> UpdateQuesionAsync(SpeakingQuestion question)
+        {
+            try
+            {
+                using (var connect = new NpgsqlConnection(connectionString))
+                {
+                    await connect.OpenAsync();
+
+                    string query = @"
+                            UPDATE speaking_question 
+                            SET 
+                                sentence = @Sentence,
+                                level = @Level,
+                                topic = @Topic,
+                                content_type = @ContentType,
+                                embedding = @Embedding
+                            WHERE question_id = @QuestionId";
+
+                    var affected = await connect.ExecuteAsync(query, new
+                    {
+                        Sentence = question.sentence,
+                        Level = question.level,
+                        Topic = question.topic,
+                        ContentType = question.contentType,
+                        Embedding = question.embedding,
+                        QuestionId = question.questionId
+                    });
+
+                    if (affected > 0)
+                        return question;
+                    else
+                        throw new Exception("Không tìm thấy câu hỏi để cập nhật.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Lỗi khi cập nhật câu hỏi: {ex.Message}");
+                throw;
+            }
+        }
+
+    private float[] ParsePgvector(object value)
+        {
+            try
+            {
+                if (value == null) return Array.Empty<float>();
+
+                // Trường hợp embedding trả về là string "[0.1, 0.2, 0.3]"
+                if (value is string str)
+                {
+                    str = str.Trim('[', ']'); // bỏ ngoặc
+                    return str.Split(',')
+                              .Select(s => float.Parse(s.Trim(), System.Globalization.CultureInfo.InvariantCulture))
+                              .ToArray();
+                }
+
+                // Trường hợp embedding là JsonElement (nếu dùng System.Text.Json deserialize)
+                if (value is System.Text.Json.JsonElement jsonElement && jsonElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                {
+                    var floats = new List<float>();
+                    foreach (var element in jsonElement.EnumerateArray())
+                    {
+                        if (element.TryGetSingle(out float val))
+                            floats.Add(val);
+                    }
+                    return floats.ToArray();
+                }
+
+                // Trường hợp embedding là ReadOnlyMemory<float> (nếu dùng thư viện hỗ trợ vector như pgvector-dotnet)
+                if (value is ReadOnlyMemory<float> memory)
+                {
+                    return memory.ToArray();
+                }
+
+                throw new InvalidCastException("Không thể parse embedding từ kiểu dữ liệu: " + value.GetType().Name);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Lỗi ParsePgvector: " + ex.Message);
+                return Array.Empty<float>();
             }
         }
     }

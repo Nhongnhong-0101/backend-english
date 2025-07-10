@@ -16,5 +16,8 @@ namespace Infrastructure.Repository.Interfaces
         Task<SpeakingQuestion?> GetFirstQuestionInTopic( string topic );
         Task<SpeakingQuestion?> GetNextQuestionByEmbeddingAsync(float[] userAnswerEmbedding, string topic);
         Task<List<SpeakingQuestion>> GetQuestionsAsync(string topic, string contentType, int num = 3 );
+
+        Task<SpeakingQuestion> UpdateQuesionAsync(SpeakingQuestion question);
+
     }
 }

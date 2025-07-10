@@ -25,5 +25,8 @@ namespace Infrastructure.Services.Interfaces
         public Task<List<SpeakingQuestion>> GetSentenceQuestionAsync(string topic, string contentType, int num);//check
         public Task<List<DialogueQuestionResponse>> GetDialogQuestionAsync(string topic, string contentType, int num);
 
+        public Task<SpeakingQuestion> GetByIdAsync(Guid idQ);
+        public Task<SpeakingQuestion> UpdateQuestionAsync(SpeakingQuestion sp);
+
     }
 }

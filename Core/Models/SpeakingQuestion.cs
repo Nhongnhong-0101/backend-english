@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using Pgvector.Dapper;
 
 namespace Core.Models
 {
@@ -13,7 +15,7 @@ namespace Core.Models
         public string level { get; set; }
         public string topic { get; set; }
         public string contentType { get; set; }
-        public float[] embedding { get; set; }
+        //public Vector embedding { get; set; }
 
         public SpeakingQuestion() { }
     }

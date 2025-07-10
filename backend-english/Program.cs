@@ -1,4 +1,5 @@
 ﻿
+using Dapper;
 using DotNetEnv;
 using Infrastructure.Repository;
 using Infrastructure.Repository.Implements;
@@ -7,6 +8,7 @@ using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Pgvector.Dapper;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
@@ -17,7 +19,7 @@ namespace backend_english
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            SqlMapper.AddTypeHandler(new VectorTypeHandler());
             var connectionString = builder.Configuration.GetConnectionString("Supabase");
 
             if (string.IsNullOrEmpty(connectionString))

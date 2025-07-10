@@ -302,5 +302,29 @@ namespace Infrastructure.Services.Implements
 
             return r;
         }
+
+        public Task<SpeakingQuestion> GetByIdAsync(Guid idQ)
+        {
+            try
+            {
+                return repository.GetByIdAsync(idQ);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
+        public Task<SpeakingQuestion> UpdateQuestionAsync(SpeakingQuestion sp)
+        {
+            try
+            {
+                return repository.UpdateQuesionAsync(sp);
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }
