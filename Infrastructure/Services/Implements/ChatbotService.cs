@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using OpenAI;
 using OpenAI.Audio;
 using OpenAI.Chat;
+using OpenAI.Embeddings;
 using Org.BouncyCastle.Asn1.Crmf;
 using System;
 using System.Collections.Generic;
@@ -16,6 +17,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Infrastructure.Services.Implements
 {
@@ -377,43 +379,47 @@ namespace Infrastructure.Services.Implements
             return content;
         }
 
-        public async Task<string> FinishChatAndGetReview(List<ChatMessageRecord> chatHistory)
+        public async Task<string> FinishChatAndGetReview(String topic, int level, List<ChatMessageRecord> chatHistory)
         {
             try
             {
-                var conversation = GetConversationHistory();
 
-                string history = string.Join("\n", conversation.Select(m => $"{m.role.ToUpper()}: {m.message}"));
-
-                int level = conversation.FirstOrDefault(m => m.role == "user")?.level ?? 1; //kco thi level 1
+                string history = string.Join("\n", chatHistory.Select(m => $"{m.role.ToUpper()}: {m.message}"));
 
                 string prompt = level switch
                 {
                     1 or 2 => $@"
                             Bạn là một giáo viên tiếng Anh.
+                            Chủ đề hội thoại: {topic}
+                            Cấp độ của học viên: {level}
 
-                            Dưới đây là toàn bộ đoạn hội thoại giữa học viên và trợ lý AI:
+                            Dưới đây là toàn bộ đoạn hội thoại giữa ban:
 
                             {history}
 
                             Hãy nhận xét tổng quan về cuộc hội thoại của học viên:
-                            1. Học viên dùng ngôn ngữ tự nhiên chưa?
-                            2. Ngữ pháp và phát âm có lỗi gì không? (Nếu có thì chỉ ra)
-                            3. Đưa ra gợi ý để cải thiện trong các cuộc hội thoại tiếp theo.
+                            1. Câu trả lời của bạn có đúng trọng tâm và phù hợp với chủ đề không?
+                            2. Cách dùng từ và diễn đạt của bạn có tự nhiên chưa?
+                            3. Có lỗi ngữ pháp hay cách diễn đạt nào cần lưu ý không? (Nếu có thì chỉ ra rõ)
+                            4. Gợi ý những điểm bạn nên cải thiện hoặc học thêm để nâng cao khả năng giao tiếp tiếng Anh.
 
-                            Trả lời bằng tiếng Việt.",
+                            Trả lời bằng tiếng Việt. Xưng hô với người học là 'bạn'",
 
                     3 => $@"
                             You are an English teacher.
+                            The topic of conversation is {topic}
+                            Level of student is {level}
 
                             Here is the full conversation between the student and the AI assistant:
 
                             {history}
 
-                            Please provide an overall feedback for the student:
-                            1. Was the student natural in using English?
-                            2. Any grammar or pronunciation mistakes?
-                            3. Suggestions to improve in future conversations.
+                            Please give a general assessment of the student's communication skills by answering the following:
+
+                            1. Are the student's answers relevant and focused on the topic?
+                            2. Are the student's word choices and expressions natural?
+                            3. Are there any grammar, pronunciation, or expression mistakes? (If yes, please point them out)
+                            4. Suggest what the student should improve or learn to enhance their English speaking skills.
 
                             Respond in English.",
                     _ => throw new ArgumentOutOfRangeException(nameof(level))
@@ -462,6 +468,32 @@ namespace Infrastructure.Services.Implements
         public void ClearSession()
         {
             conversationHistory.Clear();
+        }
+
+        public async Task<float[]> CreateEmbeddingAsync(string sentence)
+        {
+            try
+            {
+                EmbeddingClient client = new(
+                    model: "text-embedding-3-small",
+                    apiKey: gptKey
+                );
+                var embeddingResult = await client.GenerateEmbeddingAsync(sentence);
+
+                if (embeddingResult == null || embeddingResult.Value == null)
+                {
+                    Console.WriteLine("Không tạo được embedding.");
+                    return null;
+                }
+
+                return embeddingResult.Value.ToFloats().ToArray();
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Error calling GPT: " + ex.Message);
+                return null;
+            }
         }
     }
 }

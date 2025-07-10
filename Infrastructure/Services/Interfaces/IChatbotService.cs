@@ -20,7 +20,9 @@ namespace Infrastructure.Services.Interfaces
         public Task<List<KeywordsResponse>> GetKeywordsFromSentenceAsync(List<string> sentence);
         public Task<KeywordsFbResponse> GetKeywordsFeedbackAsync(List<string> keywords, string userSentence, int level);
 
-        public Task <string> FinishChatAndGetReview(List<ChatMessageRecord> chatHistory);
+        public Task <string> FinishChatAndGetReview(String topic, int level, List<ChatMessageRecord> chatHistory);
+
+        public Task<float[]> CreateEmbeddingAsync(string sentence);
 
     }
 }

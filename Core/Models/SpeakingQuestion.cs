@@ -13,7 +13,8 @@ namespace Core.Models
         public string level { get; set; }
         public string topic { get; set; }
         public string contentType { get; set; }
-        public float[] Embedding { get; set; }
+        public float[] embedding { get; set; }
 
+        public SpeakingQuestion() { }
     }
 }

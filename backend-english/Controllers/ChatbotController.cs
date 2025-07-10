@@ -1,5 +1,6 @@
 ﻿using backend_english.Request;
 using backend_english.Response;
+using Infrastructure.Services.Implements;
 using Infrastructure.Services.Interfaces;
 using Infrastructure.Services.Response;
 using Microsoft.AspNetCore.Http;
@@ -23,8 +24,6 @@ namespace backend_english.Controllers
         [HttpPost("transcribe-audio")]
         public async Task<IActionResult> TranscribeAudioAsync(IFormFile audio)
         {
-            var tex1t = await chatbotService.TranscriptAudioAsync(audio);
-
             if (audio == null || audio.Length == 0)
             {
                 return BadRequest(new ApiResponse<string>(400, "File ghi âm rỗng.", null));
@@ -115,6 +114,22 @@ namespace backend_english.Controllers
             {
                 Console.WriteLine($"Error in GetKeywordsFeedback: {ex.Message}");
                 return StatusCode(500, "An error occurred while processing the feedback.");
+            }
+        }
+        [HttpPost("finish-review")]
+        public async Task<IActionResult> FinishChatAndReview([FromBody] ReviewChatRequest request)
+        {
+            if (request.chatHistory == null || !request.chatHistory.Any())
+                return BadRequest(new ApiResponse<string>(400, "Lịch sử hội thoại trống.", null));
+
+            try
+            {
+                string review = await chatbotService.FinishChatAndGetReview(request.topic, request.level, request.chatHistory);
+                return Ok(review);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>(500, "Lỗi khi đánh giá hội thoại: " + ex.Message, null));
             }
         }
     }
